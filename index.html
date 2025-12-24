@@ -56,7 +56,7 @@
       <form id="loginForm">
         <label>ইমেইল</label>
         <input type="email" id="email" placeholder="admin@email.com" required>
-        <label>পাসওয়ার্ড</label>
+        <label>পাসওয়ার্ড</label>
         <input type="password" id="pass" placeholder="******" required>
         <button type="submit" class="primary" style="width:100%; margin-top:15px; padding:12px">প্রবেশ করুন</button>
       </form>
@@ -86,7 +86,7 @@
       </section>
 
       <section id="view-customers" class="view">
-        <input id="search" placeholder="নাম বা ফোন দিয়ে সার্চ করুন..." style="margin-bottom:15px">
+        <input id="search" placeholder="নাম, পিতা বা ফোন দিয়ে সার্চ করুন..." style="margin-bottom:15px" onkeyup="searchCustomer()">
         <div id="customerGrid" class="grid"></div>
       </section>
 
@@ -118,7 +118,7 @@
           <hr>
           <h3>হিসাবের তালিকা</h3>
           <div id="salesList"></div>
-          <h3 id="grandTotal" style="text-align:right">মোট বকেয়া: ৳০</h3>
+          <h3 id="grandTotal" style="text-align:right">মোট বকেয়া: ৳০</h3>
           <button class="danger" id="deleteCustomerBtn" style="margin-top:20px">কাস্টমার ডিলিট করুন</button>
         </div>
       </section>
@@ -169,7 +169,7 @@
       try {
         await signInWithEmailAndPassword(auth, email, pass);
       } catch (err) {
-        document.getElementById("loginError").textContent = "ভুল ইমেইল বা পাসওয়ার্ড!";
+        document.getElementById("loginError").textContent = "ভুল ইমেইল বা পাসওয়ার্ড!";
       }
     };
 
@@ -205,13 +205,23 @@
         snap.forEach(docSnap => {
           const c = {id: docSnap.id, ...docSnap.data()};
           const div = document.createElement("div");
-          div.className = "card";
-          div.innerHTML = `<h4>${c.name}</h4><p>পিতা: ${c.fatherName || 'নেই'}</p><button class="primary">বিস্তারিত</button>`;
+          div.className = "card customer-card"; // এখানে ক্লাসটি দেওয়া হয়েছে
+          div.innerHTML = `<h4>${c.name}</h4><p>পিতা: ${c.fatherName || 'নেই'} | ফোন: ${c.phone || ''}</p><button class="primary">বিস্তারিত</button>`;
           div.querySelector("button").onclick = () => openCustomer(c.id, c);
           grid.appendChild(div);
         });
       });
     }
+
+    
+    window.searchCustomer = () => {
+        let input = document.getElementById('search').value.toLowerCase();
+        let cards = document.querySelectorAll('.customer-card');
+        cards.forEach(card => {
+            let text = card.innerText.toLowerCase();
+            card.style.display = text.includes(input) ? "block" : "none";
+        });
+    };
 
     async function openCustomer(id, data) {
       document.getElementById("cName").textContent = data.name;
@@ -231,7 +241,7 @@
           row.innerHTML = `<span>${s.date}: ${s.product} (৳${s.price})</span><button class="danger" style="padding:4px 8px; font-size:10px" onclick="deleteSale('${d.id}')">মুছুন</button>`;
           list.appendChild(row);
         });
-        document.getElementById("grandTotal").textContent = `মোট বকেয়া: ৳${total}`;
+        document.getElementById("grandTotal").textContent = `মোট বকেয়া: ৳${total}`;
       });
     }
 
