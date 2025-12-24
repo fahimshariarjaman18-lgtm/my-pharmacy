@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <title>জীবন সেবা ফার্মেসি - অনলাইন</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f172a; --grad:#22c55e; --card:#ffffff; --text:#0f172a;
+      --muted:#64748b; --primary:#22c55e; --border:#e2e8f0;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:#fff; font-family: sans-serif;
+      background: radial-gradient(1000px 600px at 20% -10%, rgba(34,197,94,.35), transparent),
+                  linear-gradient(135deg, var(--grad), var(--bg));
+      min-height: 100vh;
+    }
+    header{padding:20px;text-align:center;background:rgba(0,0,0,.25)}
+    nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;background:rgba(0,0,0,.35);padding:8px}
+    nav button, .primary, .danger{
+      border:none; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer;
+    }
+    .primary, nav button{background:var(--primary);color:#063f2e}
+    .danger{background:#ef4444;color:#fff}
+    
+    main{max-width:1000px;margin:0 auto;padding:16px}
+    .view{display:none}.view.active{display:block}
+    .card{background:var(--card);color:var(--text);border-radius:16px;padding:16px;margin-bottom:15px}
+    label{display:block; margin-top:10px; color: var(--muted); font-size: 14px;}
+    input{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px; margin-top:5px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+    .row{background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:10px; margin:6px 0; display:flex; justify-content:space-between; align-items:center}
+    footer{text-align:center; padding:20px; font-size:12px; opacity:0.7}
+    
+    #auth-view{ 
+      display: none; 
+      justify-content: center; 
+      align-items: center; 
+      height: 100vh; 
+      position: fixed; 
+      top: 0; left: 0; width: 100%; 
+      background: var(--bg);
+      z-index: 1000;
+    }
+    #auth-view.active { display: flex; }
+    .login-box{ background: white; color: black; padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+  </style>
+</head>
+<body>
+
+  <div id="auth-view" class="view">
+    <div class="login-box">
+      <h2 style="color: var(--primary);">জীবন সেবা ফার্মেসি</h2>
+      <p style="color: gray;">লগইন করুন</p>
+      <form id="loginForm">
+        <label>ইমেইল</label>
+        <input type="email" id="email" placeholder="admin@email.com" required>
+        <label>পাসওয়ার্ড</label>
+        <input type="password" id="pass" placeholder="******" required>
+        <button type="submit" class="primary" style="width:100%; margin-top:15px; padding:12px">প্রবেশ করুন</button>
+      </form>
+      <p id="loginError" style="color:red; font-size:13px; margin-top:10px"></p>
+    </div>
+  </div>
+
+  <div id="app-content" style="display:none">
+    <header>
+      <h1>জীবন সেবা ফার্মেসি</h1>
+      <p>প্রো: Md. Motiur Rahman (Sujal)</p>
+    </header>
+
+    <nav>
+      <button data-route="home">হোম</button>
+      <button data-route="customers">কাস্টমার লিস্ট</button>
+      <button data-route="add">নতুন কাস্টমার</button>
+      <button class="danger" id="logoutBtn">লগআউট</button>
+    </nav>
+
+    <main>
+      <section id="view-home" class="view">
+        <div class="card" style="text-align:center">
+          <h2>স্বাগতম!</h2>
+          <p>আপনার দোকানের সব ডাটা অনলাইনে সুরক্ষিত আছে।</p>
+        </div>
+      </section>
+
+      <section id="view-customers" class="view">
+        <input id="search" placeholder="নাম বা ফোন দিয়ে সার্চ করুন..." style="margin-bottom:15px">
+        <div id="customerGrid" class="grid"></div>
+      </section>
+
+      <section id="view-add" class="view">
+        <div class="card">
+          <h3>নতুন কাস্টমার যোগ করুন</h3>
+          <form id="addForm">
+            <label>কাস্টমারের নাম</label> <input name="name" required />
+            <label>পিতার নাম</label> <input name="fatherName" />
+            <label>গ্রাম/ঠিকানা</label> <input name="village" />
+            <label>ফোন নম্বর</label> <input name="phone" />
+            <button class="primary" type="submit" style="margin-top:15px">সংরক্ষণ করুন</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="view-detail" class="view">
+        <div class="card">
+          <h2 id="cName">নাম</h2>
+          <p id="cInfo" style="color:gray"></p>
+          <hr>
+          <h3>লেনদেন যোগ করুন</h3>
+          <form id="saleForm" style="display:flex; gap:10px; flex-wrap:wrap">
+            <input type="date" name="date" required style="width:auto">
+            <input type="text" name="product" placeholder="বিবরণ" required style="flex:1">
+            <input type="number" name="price" placeholder="টাকা" required style="width:100px">
+            <button class="primary" type="submit">যোগ করুন</button>
+          </form>
+          <hr>
+          <h3>হিসাবের তালিকা</h3>
+          <div id="salesList"></div>
+          <h3 id="grandTotal" style="text-align:right">মোট বকেয়া: ৳০</h3>
+          <button class="danger" id="deleteCustomerBtn" style="margin-top:20px">কাস্টমার ডিলিট করুন</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Developed by: Fahim Shahriar Jaman</p>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAv8kkam_BMPh9e3HbZboxV8P-DgcIodB4",
+      authDomain: "pharmacy-management-b8af1.firebaseapp.com",
+      projectId: "pharmacy-management-b8af1",
+      storageBucket: "pharmacy-management-b8af1.firebasestorage.app",
+      messagingSenderId: "999414606702",
+      appId: "1:999414606702:web:4086b909849b32b3d22f7f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const authView = document.getElementById("auth-view");
+    const appContent = document.getElementById("app-content");
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        authView.classList.remove("active");
+        appContent.style.display = "block";
+        navigate("home");
+        loadCustomers();
+      } else {
+        authView.classList.add("active");
+        appContent.style.display = "none";
+      }
+    });
+
+    document.getElementById("loginForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("pass").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        document.getElementById("loginError").textContent = "ভুল ইমেইল বা পাসওয়ার্ড!";
+      }
+    };
+
+    document.getElementById("logoutBtn").onclick = () => signOut(auth);
+
+    function navigate(route) {
+      document.querySelectorAll("main .view").forEach(v => v.classList.remove("active"));
+      document.getElementById("view-" + route).classList.add("active");
+    }
+
+    document.querySelectorAll("nav button[data-route]").forEach(btn => {
+      btn.onclick = () => navigate(btn.dataset.route);
+    });
+
+    document.getElementById("addForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      await addDoc(collection(db, "customers"), { 
+        name: f.name.value, 
+        fatherName: f.fatherName.value, 
+        village: f.village.value, 
+        phone: f.phone.value, 
+        createdAt: Date.now() 
+      });
+      f.reset();
+      navigate("customers");
+    };
+
+    function loadCustomers() {
+      onSnapshot(collection(db, "customers"), (snap) => {
+        const grid = document.getElementById("customerGrid");
+        grid.innerHTML = "";
+        snap.forEach(docSnap => {
+          const c = {id: docSnap.id, ...docSnap.data()};
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `<h4>${c.name}</h4><p>পিতা: ${c.fatherName || 'নেই'}</p><button class="primary">বিস্তারিত</button>`;
+          div.querySelector("button").onclick = () => openCustomer(c.id, c);
+          grid.appendChild(div);
+        });
+      });
+    }
+
+    async function openCustomer(id, data) {
+      document.getElementById("cName").textContent = data.name;
+      document.getElementById("cInfo").textContent = `পিতা: ${data.fatherName || 'নেই'} | গ্রাম: ${data.village} | ফোন: ${data.phone}`;
+      window.currentCustomerId = id;
+      navigate("detail");
+      const q = query(collection(db, "sales"), where("customerId", "==", id));
+      onSnapshot(q, (snap) => {
+        const list = document.getElementById("salesList");
+        list.innerHTML = "";
+        let total = 0;
+        snap.forEach(d => {
+          const s = d.data();
+          total += s.price;
+          const row = document.createElement("div");
+          row.className = "row";
+          row.innerHTML = `<span>${s.date}: ${s.product} (৳${s.price})</span><button class="danger" style="padding:4px 8px; font-size:10px" onclick="deleteSale('${d.id}')">মুছুন</button>`;
+          list.appendChild(row);
+        });
+        document.getElementById("grandTotal").textContent = `মোট বকেয়া: ৳${total}`;
+      });
+    }
+
+    window.deleteSale = async (id) => {
+      if(confirm("লেনদেনটি মুছতে চান?")) {
+        await deleteDoc(doc(db, "sales", id));
+      }
+    };
+
+    document.getElementById("saleForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      await addDoc(collection(db, "sales"), { customerId: window.currentCustomerId, date: f.date.value, product: f.product.value, price: Number(f.price.value) });
+      f.reset();
+    };
+
+    document.getElementById("deleteCustomerBtn").onclick = async () => {
+      if(confirm("কাস্টমার ডিলিট করলে সব ডাটা চলে যাবে। নিশ্চিত?")) {
+        await deleteDoc(doc(db, "customers", window.currentCustomerId));
+        navigate("customers");
+      }
+    };
+  </script>
+</body>
+</html>
