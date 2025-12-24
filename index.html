@@ -11,7 +11,7 @@
     }
     *{box-sizing:border-box}
     body{
-      margin:0; color:#fff; font-family: sans-serif;
+      margin:0; color:#fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: radial-gradient(1000px 600px at 20% -10%, rgba(34,197,94,.35), transparent),
                   linear-gradient(135deg, var(--grad), var(--bg));
       min-height: 100vh;
@@ -45,6 +45,8 @@
     }
     #auth-view.active { display: flex; }
     .login-box{ background: white; color: black; padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .stats-box { display: flex; gap: 10px; margin-bottom: 15px; }
+    .stat-card { flex: 1; padding: 15px; border-radius: 12px; text-align: center; background: white; color: #0f172a; }
   </style>
 </head>
 <body>
@@ -72,21 +74,31 @@
 
     <nav>
       <button data-route="home">হোম</button>
-      <button data-route="customers">কাস্টমার লিস্ট</button>
+      <button data-route="customers">বাকি তালিকা</button>
       <button data-route="add">নতুন কাস্টমার</button>
       <button class="danger" id="logoutBtn">লগআউট</button>
     </nav>
 
     <main>
       <section id="view-home" class="view">
+        <div class="stats-box">
+          <div class="stat-card">
+            <h4 style="margin:0; font-size:12px; color:gray">মোট বকেয়া</h4>
+            <h2 id="totalBakiHome" style="margin:5px 0; color:#ef4444">৳০</h2>
+          </div>
+          <div class="stat-card">
+            <h4 style="margin:0; font-size:12px; color:gray">আজকের বাকি</h4>
+            <h2 id="ajkerBakiHome" style="margin:5px 0; color:#22c55e">৳০</h2>
+          </div>
+        </div>
         <div class="card" style="text-align:center">
           <h2>স্বাগতম!</h2>
-          <p>আপনার দোকানের সব ডাটা অনলাইনে সুরক্ষিত আছে।</p>
+          <p>আপনার সব হিসাব অনলাইনে সুরক্ষিত আছে।</p>
         </div>
       </section>
 
       <section id="view-customers" class="view">
-        <input id="search" placeholder="নাম, পিতা বা ফোন দিয়ে সার্চ করুন..." style="margin-bottom:15px" onkeyup="searchCustomer()">
+        <input id="search" placeholder="নাম, পিতা বা ফোন লিখে খুঁজুন..." style="margin-bottom:15px" onkeyup="searchCustomer()">
         <div id="customerGrid" class="grid"></div>
       </section>
 
@@ -108,24 +120,24 @@
           <h2 id="cName">নাম</h2>
           <p id="cInfo" style="color:gray"></p>
           <hr>
-          <h3>লেনদেন যোগ করুন</h3>
+          <h3>নতুন লেনদেন</h3>
           <form id="saleForm" style="display:flex; gap:10px; flex-wrap:wrap">
-            <input type="date" name="date" required style="width:auto">
-            <input type="text" name="product" placeholder="বিবরণ" required style="flex:1">
+            <input type="date" name="date" id="saleDate" required style="width:auto">
+            <input type="text" name="product" placeholder="ওষুধের নাম/বিবরণ" required style="flex:1">
             <input type="number" name="price" placeholder="টাকা" required style="width:100px">
             <button class="primary" type="submit">যোগ করুন</button>
           </form>
           <hr>
           <h3>হিসাবের তালিকা</h3>
           <div id="salesList"></div>
-          <h3 id="grandTotal" style="text-align:right">মোট বকেয়া: ৳০</h3>
+          <h3 id="grandTotal" style="text-align:right">ব্যক্তিগত মোট বকেয়া: ৳০</h3>
           <button class="danger" id="deleteCustomerBtn" style="margin-top:20px">কাস্টমার ডিলিট করুন</button>
         </div>
       </section>
     </main>
 
     <footer>
-      <p>Developed by: Fahim Shahriar Jaman</p>
+      <p>তৈরি করেছেন: ফাহিম শাহরিয়ার জামান</p>
     </footer>
   </div>
 
@@ -156,6 +168,7 @@
         appContent.style.display = "block";
         navigate("home");
         loadCustomers();
+        updateGlobalStats();
       } else {
         authView.classList.add("active");
         appContent.style.display = "none";
@@ -178,6 +191,9 @@
     function navigate(route) {
       document.querySelectorAll("main .view").forEach(v => v.classList.remove("active"));
       document.getElementById("view-" + route).classList.add("active");
+      if(route === 'detail') {
+        document.getElementById('saleDate').valueAsDate = new Date();
+      }
     }
 
     document.querySelectorAll("nav button[data-route]").forEach(btn => {
@@ -205,7 +221,7 @@
         snap.forEach(docSnap => {
           const c = {id: docSnap.id, ...docSnap.data()};
           const div = document.createElement("div");
-          div.className = "card customer-card"; // এখানে ক্লাসটি দেওয়া হয়েছে
+          div.className = "card customer-card";
           div.innerHTML = `<h4>${c.name}</h4><p>পিতা: ${c.fatherName || 'নেই'} | ফোন: ${c.phone || ''}</p><button class="primary">বিস্তারিত</button>`;
           div.querySelector("button").onclick = () => openCustomer(c.id, c);
           grid.appendChild(div);
@@ -213,7 +229,6 @@
       });
     }
 
-    
     window.searchCustomer = () => {
         let input = document.getElementById('search').value.toLowerCase();
         let cards = document.querySelectorAll('.customer-card');
@@ -241,7 +256,24 @@
           row.innerHTML = `<span>${s.date}: ${s.product} (৳${s.price})</span><button class="danger" style="padding:4px 8px; font-size:10px" onclick="deleteSale('${d.id}')">মুছুন</button>`;
           list.appendChild(row);
         });
-        document.getElementById("grandTotal").textContent = `মোট বকেয়া: ৳${total}`;
+        document.getElementById("grandTotal").textContent = `ব্যক্তিগত মোট বকেয়া: ৳${total}`;
+      });
+    }
+
+    function updateGlobalStats() {
+      const today = new Date().toLocaleDateString('en-CA'); // 'YYYY-MM-DD' format
+      onSnapshot(collection(db, "sales"), (snap) => {
+        let totalBaki = 0;
+        let ajkerBaki = 0;
+        snap.forEach(d => {
+          const s = d.data();
+          totalBaki += s.price;
+          if(s.date === today) {
+            ajkerBaki += s.price;
+          }
+        });
+        document.getElementById('totalBakiHome').textContent = `৳${totalBaki}`;
+        document.getElementById('ajkerBakiHome').textContent = `৳${ajkerBaki}`;
       });
     }
 
@@ -256,10 +288,11 @@
       const f = e.target;
       await addDoc(collection(db, "sales"), { customerId: window.currentCustomerId, date: f.date.value, product: f.product.value, price: Number(f.price.value) });
       f.reset();
+      document.getElementById('saleDate').valueAsDate = new Date();
     };
 
     document.getElementById("deleteCustomerBtn").onclick = async () => {
-      if(confirm("কাস্টমার ডিলিট করলে সব ডাটা চলে যাবে। নিশ্চিত?")) {
+      if(confirm("কাস্টমার ডিলিট করলে তার সব হিসাব মুছে যাবে। নিশ্চিত?")) {
         await deleteDoc(doc(db, "customers", window.currentCustomerId));
         navigate("customers");
       }
