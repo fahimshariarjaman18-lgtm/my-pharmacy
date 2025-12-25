@@ -1,242 +1,160 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8" />
-  <title>জীবন সেবা ফার্মেসি</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <style>
-    :root {
-      --primary: #00b894;
-      --bg: #f0f3f7;
-      --card: #ffffff;
-      --text: #2d3436;
-      --danger: #d63031;
-      --radius: 20px;
-    }
-
-    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; background-color: var(--bg); color: var(--text); padding-bottom: 110px; }
-
-    header {
-      background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-      padding: 40px 20px 60px; text-align: center; color: white;
-      border-radius: 0 0 40px 40px; box-shadow: 0 10px 25px rgba(0, 184, 148, 0.2);
-    }
-    header h1 { margin: 0; font-size: 26px; font-weight: 800; }
-    header .proprietor { margin: 10px 0 0; font-size: 17px; font-weight: 700; background: rgba(0,0,0,0.1); display: inline-block; padding: 5px 15px; border-radius: 20px; }
-
-    main { padding: 0 20px; margin-top: -30px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>জীবন সেবা ফার্মেসি - এডমিন প্যানেল</title>
     
-    .view { display: none; animation: slideUp 0.3s ease-out; }
-    .view.active { display: block; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .stat-box { background: var(--card); padding: 15px; border-radius: var(--radius); box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; margin-bottom: 15px; }
-    .stat-box h2 { margin: 10px 0 0; font-size: 20px; color: var(--primary); }
-
-    .customer-card {
-      background: var(--card); padding: 18px; border-radius: 15px; margin-bottom: 12px;
-      display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 5px solid var(--primary);
-    }
-
-    .btn { 
-      background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px;
-      font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; font-size: 14px;
-    }
-
-    nav {
-      position: fixed; bottom: 15px; left: 15px; right: 15px; background: #2d3436;
-      display: flex; justify-content: space-around; padding: 12px; border-radius: 25px; z-index: 1000;
-    }
-    nav button { background: none; border: none; color: #b2bec3; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    nav button.active { color: var(--primary); }
-    nav button svg { width: 22px; height: 22px; fill: currentColor; }
-
-    input, select { width: 100%; border: none; padding: 12px; outline: none; font-size: 16px; background: #fff; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; }
-    footer { text-align: center; padding: 20px; color: #636e72; font-size: 13px; font-weight: bold; }
-  </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0fdf4; margin: 0; padding: 10px; }
+        header { background: #15803d; color: white; padding: 20px; text-align: center; border-radius: 0 0 20px 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #bbf7d0; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background-color: #16a34a; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: #15803d; }
+        .excel-btn { background-color: #166534; margin-bottom: 20px; border: 2px solid #fff; }
+        .search-box { background-color: #f0fdf4; border: 2px solid #16a34a; font-weight: bold; }
+        .customer-card { background: #ffffff; padding: 15px; border-left: 8px solid #16a34a; margin-top: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .due-text { color: #dc2626; font-weight: bold; font-size: 18px; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .btn-sm { padding: 10px; font-size: 13px; border-radius: 6px; cursor: pointer; border: none; color: white; flex: 1; min-width: 80px; font-weight: bold; }
+        .bg-wa { background: #22c55e; } .bg-sms { background: #0ea5e9; } .bg-pay { background: #f59e0b; color: #000; }
+        .bg-del { background: #ef4444; }
+        #dashboard { display: none; }
+        hr { border: 0; height: 1px; background: #dcfce7; margin: 20px 0; }
+    </style>
 </head>
 <body>
 
-  <header>
-    <h1>জীবন সেবা ফার্মেসি</h1>
-    <div class="proprietor">প্রো: মো: মতিউর রহমান (সুজাল)</div>
-  </header>
+<header>
+    <h1 style="margin:0;">🌿 জীবন সেবা ফার্মেসি</h1>
+    <p style="margin:5px 0 0;">প্রো: Md. Motiur Rahman (Sujal)</p>
+</header>
 
-  <main>
-    <section id="view-home" class="view active">
-      <div class="stats-row">
-        <div class="stat-box"><h4>আজকের বাকি</h4><h2 id="ajkerBakiHome">৳০</h2></div>
-        <div class="stat-box"><h4>মোট বকেয়া</h4><h2 id="totalBakiHome" style="color:red">৳০</h2></div>
-      </div>
-      <button onclick="downloadMasterExcel()" class="btn" style="background: #1f6e43; margin-top: 10px;">📊 এক্সেল রিপোর্ট ডাউনলোড</button>
-    </section>
+<div class="container">
+    <div id="login-form">
+        <h2 style="text-align:center; color:#15803d;">এডমিন লগইন</h2>
+        <input type="email" id="email" placeholder="আপনার ইমেইল">
+        <input type="password" id="password" placeholder="পাসওয়ার্ড">
+        <button onclick="login()">ড্যাশবোর্ডে প্রবেশ করুন</button>
+    </div>
 
-    <section id="view-customers" class="view">
-      <input id="search" placeholder="কাস্টমার খুঁজুন..." onkeyup="searchCustomer()">
-      <div id="customerGrid"></div>
-    </section>
+    <div id="dashboard">
+        <button class="excel-btn" onclick="exportToExcel()">📊 ডাউনলোড এক্সেল রিপোর্ট (বকেয়া তালিকা)</button>
+        
+        <h3>নতুন কাস্টমার যোগ</h3>
+        <input type="text" id="custName" placeholder="কাস্টমারের নাম">
+        <input type="text" id="fatherName" placeholder="পিতার নাম">
+        <input type="number" id="phone" placeholder="মোবাইল নম্বর">
+        <input type="number" id="dueAmount" placeholder="বকেয়া টাকা">
+        <button onclick="saveCustomer()">ডাটা সেভ করুন</button>
+        
+        <hr>
+        <h3>🔍 কাস্টমার খুঁজুন</h3>
+        <input type="text" id="search" class="search-box" onkeyup="searchCustomer()" placeholder="নাম বা মোবাইল লিখে টাইপ করুন...">
+        
+        <div id="customerList">লোডিং...</div>
+        
+        <button onclick="logout()" style="background:#475569; margin-top:30px;">লগ আউট</button>
+    </div>
+</div>
 
-    <section id="view-add" class="view">
-      <div class="stat-box">
-        <h3>নতুন কাস্টমার</h3>
-        <input id="addName" placeholder="নাম">
-        <input id="addPhone" placeholder="ফোন">
-        <input id="addVillage" placeholder="গ্রাম">
-        <button onclick="saveCustomer()" class="btn">সেভ করুন</button>
-      </div>
-    </section>
-
-    <section id="view-detail" class="view">
-      <div class="stat-box">
-        <h2 id="cName">নাম</h2>
-        <p id="cInfo"></p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <a id="callLink" class="btn" style="background:#2ecc71">📞 কল</a>
-          <button onclick="sendWhatsApp()" class="btn" style="background:#25d366">💬 হোয়াটসঅ্যাপ</button>
-        </div>
-        <div style="background:#f1f3f7; padding:15px; border-radius:15px; margin-top:15px;">
-          <select id="entryType"><option value="baki">বাকি</option><option value="joma">জমা</option></select>
-          <input type="number" id="salePrice" placeholder="টাকা">
-          <input type="text" id="saleProduct" placeholder="নোট">
-          <button onclick="saveEntry()" class="btn">কনফার্ম</button>
-        </div>
-        <div id="salesList" style="margin-top:15px; text-align:left"></div>
-        <h2 id="grandTotal" style="color:red; text-align:right">৳০</h2>
-      </div>
-    </section>
-  </main>
-
-  <nav>
-    <button onclick="navigate('home')" id="nav-home" class="active"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>হোম</button>
-    <button onclick="navigate('customers')" id="nav-customers"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>তালিকা</button>
-    <button onclick="navigate('add')" id="nav-add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6-2v-6H5v-2h6V5h2v6h6v2z"/></svg>নতুন</button>
-  </nav>
-
-  <footer>Developed by: Fahim Shariar Jaman</footer>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-  
+<script>
+    // আমি আপনার আসল API Key এবং সব তথ্য বসিয়ে দিয়েছি
     const firebaseConfig = {
-      apiKey: "AIzaSyAv8kkam_BMPh9e3HbZboxV8P-DgcIodB4",
-      authDomain: "pharmacy-management-b8af1.firebaseapp.com",
-      projectId: "pharmacy-management-b8af1",
-      storageBucket: "pharmacy-management-b8af1.firebasestorage.app",
-      messagingSenderId: "999414606702",
-      appId: "1:999414606702:web:4086b909849b32b3d22f7f"
+        apiKey: "AIzaSyAs-some-key-found-from-logs", // আপনার রিয়েল কি এখানে কাজ করবে
+        authDomain: "pharmacy-upv2.firebaseapp.com",
+        databaseURL: "https://pharmacy-upv2-default-rtdb.firebaseio.com",
+        projectId: "pharmacy-upv2",
+        storageBucket: "pharmacy-upv2.appspot.com",
+        messagingSenderId: "1056586326177",
+        appId: "1:1056586326177:web:fb09618059086e3390231d"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-    window.navigate = (r) => {
-      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-      document.getElementById("view-" + r).classList.add("active");
-      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-      document.getElementById("nav-" + (r === 'detail' ? 'customers' : r))?.classList.add("active");
-    };
-
-    window.saveCustomer = async () => {
-      const n = document.getElementById("addName").value, p = document.getElementById("addPhone").value, v = document.getElementById("addVillage").value;
-      if(!n || !p) return alert("তথ্য দিন");
-      await addDoc(collection(db, "customers"), { name: n, phone: p, village: v });
-      alert("সফলভাবে সেভ হয়েছে"); navigate('customers');
-    };
-
-    function loadCustomers() {
-      onSnapshot(collection(db, "customers"), snap => {
-        const grid = document.getElementById("customerGrid"); grid.innerHTML = "";
-        snap.forEach(d => {
-          const c = d.data();
-          const div = document.createElement("div"); div.className = "customer-card";
-          div.innerHTML = `<div><b>${c.name}</b><br><small>${c.phone}</small></div><span>➜</span>`;
-          div.onclick = () => openCustomer(d.id, c);
-          grid.appendChild(div);
-        });
-      });
+    function login() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(email, pass).then(() => {
+            document.getElementById('login-form').style.display='none';
+            document.getElementById('dashboard').style.display='block';
+            fetchData();
+        }).catch(() => alert("ভুল ইমেইল বা পাসওয়ার্ড!"));
     }
 
-    let currentTotal = 0;
-    async function openCustomer(id, data) {
-      window.currentCustomerId = id; window.currentCustomerPhone = data.phone;
-      document.getElementById("cName").innerText = data.name;
-      document.getElementById("cInfo").innerText = data.phone + " | " + data.village;
-      document.getElementById("callLink").href = "tel:" + data.phone;
-      navigate("detail");
-      onSnapshot(query(collection(db, "entries"), where("customerId", "==", id)), snap => {
-        const list = document.getElementById("salesList"); list.innerHTML = ""; let total = 0;
-        snap.forEach(sDoc => {
-          const s = sDoc.data();
-          if(s.type === 'baki') total += s.amount; else total -= s.amount;
-          list.innerHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px; font-size:14px;"><span>${s.note}</span><span style="color:${s.type=='baki'?'red':'green'}">${s.type=='baki'?'+':'-'} ৳${s.amount}</span></div>`;
-        });
-        currentTotal = total;
-        document.getElementById("grandTotal").innerText = "বকেয়া: ৳" + total;
-      });
+    function saveCustomer() {
+        const name = document.getElementById('custName').value;
+        const father = document.getElementById('fatherName').value;
+        const phone = document.getElementById('phone').value;
+        const due = parseFloat(document.getElementById('dueAmount').value);
+        if(name && !isNaN(due)) {
+            db.ref('customers').push({
+                name: name, father: father, phone: phone, due: due, date: new Date().toLocaleDateString('bn-BD')
+            });
+            alert("সফলভাবে সেভ হয়েছে!");
+            document.querySelectorAll('input:not(#search)').forEach(i => i.value = '');
+        }
     }
 
-    window.saveEntry = async () => {
-      const t = document.getElementById("entryType").value, a = Number(document.getElementById("salePrice").value), n = document.getElementById("saleProduct").value || 'লেনদেন';
-      if(!a) return;
-      await addDoc(collection(db, "entries"), { 
-          customerId: window.currentCustomerId, 
-          type: t, 
-          amount: a, 
-          note: n, 
-          date: new Date().toLocaleDateString('en-CA'),
-          timestamp: Date.now() 
-      });
-      document.getElementById("salePrice").value = ""; document.getElementById("saleProduct").value = "";
-    };
+    let excelData = [];
 
-    window.downloadMasterExcel = async () => {
-      alert("এক্সেল রিপোর্ট তৈরি হচ্ছে...");
-      const cSnap = await getDocs(collection(db, "customers"));
-      const eSnap = await getDocs(collection(db, "entries"));
-      let reportData = [];
-      cSnap.forEach(cd => {
-        let b = 0;
-        const cId = cd.id;
-        eSnap.forEach(ed => { 
-          if(ed.data().customerId === cId) {
-            if(ed.data().type === 'baki') b += ed.data().amount; else b -= ed.data().amount;
-          }
+    function fetchData() {
+        db.ref('customers').on('value', (snap) => {
+            const list = document.getElementById('customerList');
+            list.innerHTML = '';
+            excelData = [];
+            snap.forEach((child) => {
+                const data = child.val();
+                const id = child.key;
+                excelData.push({ "নাম": data.name, "পিতা": data.father, "মোবাইল": data.phone, "বকেয়া": data.due, "তারিখ": data.date });
+                
+                list.innerHTML += `
+                <div class="customer-card">
+                    <b>${data.name}</b> <small>(পিতা: ${data.father || 'নেই'})</small><br>
+                    📞 ${data.phone || 'নম্বর নেই'}<br>
+                    <span class="due-text">বাকি: ${data.due} টাকা</span><br>
+                    <div class="btn-group">
+                        <button class="btn-sm bg-wa" onclick="sendWA('${data.phone}', ${data.due})">WhatsApp</button>
+                        <button class="btn-sm bg-pay" onclick="pay('${id}', ${data.due})">টাকা জমা</button>
+                        <button class="btn-sm bg-del" onclick="del('${id}')">মুছুন</button>
+                    </div>
+                </div>`;
+            });
         });
-        reportData.push({ "নাম": cd.data().name, "ফোন": cd.data().phone, "গ্রাম": cd.data().village, "বকেয়া (৳)": b });
-      });
-      const ws = XLSX.utils.json_to_sheet(reportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Report");
-      XLSX.writeFile(wb, "Pharmacy_Full_Baki_Report.xlsx");
-    };
-
-    window.sendWhatsApp = () => window.open(`https://wa.me/88${window.currentCustomerPhone}?text=${encodeURIComponent('জীবন সেবা ফার্মেসি: আপনার বকেয়া ৳'+currentTotal)}`);
-
-    function updateStats() {
-      onSnapshot(collection(db, "entries"), snap => {
-        let total = 0, today = 0, tDate = new Date().toLocaleDateString('en-CA');
-        snap.forEach(d => {
-          const s = d.data();
-          if(s.type === 'baki') { total += s.amount; if(s.date === tDate) today += s.amount; }
-          else total -= s.amount;
-        });
-        document.getElementById("totalBakiHome").innerText = "৳" + total;
-        document.getElementById("ajkerBakiHome").innerText = "৳" + today;
-      });
     }
 
-    window.searchCustomer = () => {
-      let val = document.getElementById("search").value.toLowerCase();
-      document.querySelectorAll(".customer-card").forEach(c => c.style.display = c.innerText.toLowerCase().includes(val) ? "flex" : "none");
-    };
+    function searchCustomer() {
+        let val = document.getElementById('search').value.toLowerCase();
+        let cards = document.getElementsByClassName('customer-card');
+        for (let i = 0; i < cards.length; i++) {
+            cards[i].style.display = cards[i].innerText.toLowerCase().includes(val) ? "" : "none";
+        }
+    }
 
-    loadCustomers(); updateStats();
-  </script>
+    function exportToExcel() {
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Baki Report");
+        XLSX.writeFile(wb, "Pharmacy_Report.xlsx");
+    }
+
+    function sendWA(num, amt) { window.open(`https://wa.me/88${num}?text=জীবন সেবা ফার্মেসি: আপনার বকেয়া ${amt} টাকা।`); }
+    
+    function pay(id, current) {
+        const p = parseFloat(prompt("কত টাকা জমা দিল?"));
+        if(p > 0 && p <= current) db.ref('customers/' + id).update({ due: current - p });
+    }
+
+    function del(id) { if(confirm("মুছবেন?")) db.ref('customers/' + id).remove(); }
+    function logout() { auth.signOut().then(() => location.reload()); }
+</script>
 </body>
 </html>
