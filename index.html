@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -112,7 +113,7 @@
   <nav>
     <button onclick="navigate('home')" id="nav-home" class="active"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>হোম</button>
     <button onclick="navigate('customers')" id="nav-customers"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>তালিকা</button>
-    <button onclick="navigate('add')" id="nav-add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>নতুন</button>
+    <button onclick="navigate('add')" id="nav-add"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6-2v-6H5v-2h6V5h2v6h6v2z"/></svg>নতুন</button>
   </nav>
 
   <footer>Developed by: Fahim Shariar Jaman</footer>
@@ -121,7 +122,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    // আপনার অরিজিনাল ডাটাবেস কানেকশন
+  
     const firebaseConfig = {
       apiKey: "AIzaSyAv8kkam_BMPh9e3HbZboxV8P-DgcIodB4",
       authDomain: "pharmacy-management-b8af1.firebaseapp.com",
@@ -173,7 +174,7 @@
         snap.forEach(sDoc => {
           const s = sDoc.data();
           if(s.type === 'baki') total += s.amount; else total -= s.amount;
-          list.innerHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px;"><span>${s.note}</span><span style="color:${s.type=='baki'?'red':'green'}">${s.type=='baki'?'+':'-'} ৳${s.amount}</span></div>`;
+          list.innerHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px; font-size:14px;"><span>${s.note}</span><span style="color:${s.type=='baki'?'red':'green'}">${s.type=='baki'?'+':'-'} ৳${s.amount}</span></div>`;
         });
         currentTotal = total;
         document.getElementById("grandTotal").innerText = "বকেয়া: ৳" + total;
@@ -195,23 +196,24 @@
     };
 
     window.downloadMasterExcel = async () => {
-      alert("রিপোর্ট তৈরি হচ্ছে...");
+      alert("এক্সেল রিপোর্ট তৈরি হচ্ছে...");
       const cSnap = await getDocs(collection(db, "customers"));
       const eSnap = await getDocs(collection(db, "entries"));
-      let data = [];
+      let reportData = [];
       cSnap.forEach(cd => {
         let b = 0;
+        const cId = cd.id;
         eSnap.forEach(ed => { 
-          if(ed.data().customerId === cd.id) {
+          if(ed.data().customerId === cId) {
             if(ed.data().type === 'baki') b += ed.data().amount; else b -= ed.data().amount;
           }
         });
-        data.push({ "নাম": cd.data().name, "ফোন": cd.data().phone, "গ্রাম": cd.data().village, "মোট বকেয়া": b });
+        reportData.push({ "নাম": cd.data().name, "ফোন": cd.data().phone, "গ্রাম": cd.data().village, "বকেয়া (৳)": b });
       });
-      const ws = XLSX.utils.json_to_sheet(data);
+      const ws = XLSX.utils.json_to_sheet(reportData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Report");
-      XLSX.writeFile(wb, "Pharmacy_Report.xlsx");
+      XLSX.writeFile(wb, "Pharmacy_Full_Baki_Report.xlsx");
     };
 
     window.sendWhatsApp = () => window.open(`https://wa.me/88${window.currentCustomerPhone}?text=${encodeURIComponent('জীবন সেবা ফার্মেসি: আপনার বকেয়া ৳'+currentTotal)}`);
