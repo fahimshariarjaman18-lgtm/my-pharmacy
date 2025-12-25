@@ -17,6 +17,9 @@
       min-height: 100vh;
     }
     header{padding:20px;text-align:center;background:rgba(0,0,0,.25)}
+    header h1 { margin: 0; font-size: 24px; }
+    header p { margin: 5px 0 0; font-size: 16px; font-weight: bold; color: #d1fae5; }
+    
     nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;background:rgba(0,0,0,.35);padding:8px}
     nav button, .primary, .danger, .success{
       border:none; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer;
@@ -40,7 +43,7 @@
     .action-group button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; color: white; }
     .btn-baki { background: #ef4444; }
     .btn-joma { background: #10b981; }
-    .comm-btn{ padding: 8px; border-radius: 8px; text-decoration: none; color: white; font-size: 12px; display: inline-block; margin-right: 5px; }
+    .comm-btn{ padding: 8px 12px; border-radius: 8px; text-decoration: none; color: white; font-size: 12px; display: inline-block; margin-right: 5px; font-weight: bold; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -113,7 +116,7 @@
         <div class="card">
           <h2 id="cName">নাম</h2>
           <p id="cInfo" style="color:gray"></p>
-          <div id="commActions" style="margin: 10px 0;"></div>
+          <div id="commActions" style="margin: 15px 0;"></div>
           <hr>
           
           <h3>লেনদেন এন্ট্রি</h3>
@@ -229,8 +232,17 @@
     async function openCustomer(id, data) {
       document.getElementById("cName").textContent = data.name;
       document.getElementById("cInfo").textContent = `পিতা: ${data.fatherName || 'নেই'} | গ্রাম: ${data.village} | ফোন: ${data.phone}`;
+      
       const commBox = document.getElementById("commActions");
-      commBox.innerHTML = data.phone ? `<a href="tel:${data.phone}" class="comm-btn" style="background:#3b82f6">📞 কল</a> <a href="https://wa.me/88${data.phone}" class="comm-btn" style="background:#25d366">💬 WhatsApp</a>` : '';
+      if(data.phone) {
+        commBox.innerHTML = `
+          <a href="tel:${data.phone}" class="comm-btn" style="background:#3b82f6">📞 কল</a>
+          <a href="https://wa.me/88${data.phone}" class="comm-btn" style="background:#25d366">💬 WhatsApp</a>
+          <a href="sms:${data.phone}" class="comm-btn" style="background:#6366f1">✉️ এসএমএস</a>
+        `;
+      } else {
+        commBox.innerHTML = '<p style="color:red; font-size:12px">ফোন নম্বর নেই</p>';
+      }
       
       window.currentCustomerId = id;
       navigate("detail");
@@ -253,7 +265,6 @@
       let amount = Number(document.getElementById("entryAmount").value);
       if(!desc || !amount) return alert("বিবরণ ও টাকা দিন");
       
-   
       if(type === 'joma') amount = -Math.abs(amount);
       else amount = Math.abs(amount);
 
