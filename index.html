@@ -1,160 +1,320 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>জীবন সেবা ফার্মেসি - এডমিন প্যানেল</title>
+  <meta charset="UTF-8" />
+  <title>জীবন সেবা ফার্মেসি - অনলাইন</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f172a; --grad:#22c55e; --card:#ffffff; --text:#0f172a;
+      --muted:#64748b; --primary:#22c55e; --border:#e2e8f0;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:#fff; font-family: sans-serif;
+      background: radial-gradient(1000px 600px at 20% -10%, rgba(34,197,94,.35), transparent),
+                  linear-gradient(135deg, var(--grad), var(--bg));
+      min-height: 100vh;
+    }
+    header{padding:20px;text-align:center;background:rgba(0,0,0,.25)}
+    nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;background:rgba(0,0,0,.35);padding:8px}
+    nav button, .primary, .danger, .success{
+      border:none; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer;
+    }
+    .primary, nav button{background:var(--primary);color:#063f2e}
+    .danger{background:#ef4444;color:#fff}
+    .success{background:#10b981;color:#fff; border: 1px solid #fff;}
     
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    main{max-width:1000px;margin:0 auto;padding:16px}
+    .view{display:none}.view.active{display:block}
+    .card{background:var(--card);color:var(--text);border-radius:16px;padding:16px;margin-bottom:15px}
+    label{display:block; margin-top:10px; color: var(--muted); font-size: 14px;}
+    input{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px; margin-top:5px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+    .row{background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:10px; margin:6px 0; display:flex; justify-content:space-between; align-items:center}
+    footer{text-align:center; padding:20px; font-size:12px; opacity:0.7}
     
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0fdf4; margin: 0; padding: 10px; }
-        header { background: #15803d; color: white; padding: 20px; text-align: center; border-radius: 0 0 20px 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #bbf7d0; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 12px; background-color: #16a34a; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
-        button:hover { background-color: #15803d; }
-        .excel-btn { background-color: #166534; margin-bottom: 20px; border: 2px solid #fff; }
-        .search-box { background-color: #f0fdf4; border: 2px solid #16a34a; font-weight: bold; }
-        .customer-card { background: #ffffff; padding: 15px; border-left: 8px solid #16a34a; margin-top: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .due-text { color: #dc2626; font-weight: bold; font-size: 18px; }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-        .btn-sm { padding: 10px; font-size: 13px; border-radius: 6px; cursor: pointer; border: none; color: white; flex: 1; min-width: 80px; font-weight: bold; }
-        .bg-wa { background: #22c55e; } .bg-sms { background: #0ea5e9; } .bg-pay { background: #f59e0b; color: #000; }
-        .bg-del { background: #ef4444; }
-        #dashboard { display: none; }
-        hr { border: 0; height: 1px; background: #dcfce7; margin: 20px 0; }
-    </style>
+    #auth-view{ display: none; justify-content: center; align-items: center; height: 100vh; position: fixed; top: 0; left: 0; width: 100%; background: var(--bg); z-index: 1000; }
+    #auth-view.active { display: flex; }
+    .login-box{ background: white; color: black; padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; }
+    .comm-btn{ padding: 8px; border-radius: 8px; text-decoration: none; color: white; font-size: 12px; display: inline-block; margin-right: 5px; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
-<header>
-    <h1 style="margin:0;">🌿 জীবন সেবা ফার্মেসি</h1>
-    <p style="margin:5px 0 0;">প্রো: Md. Motiur Rahman (Sujal)</p>
-</header>
-
-<div class="container">
-    <div id="login-form">
-        <h2 style="text-align:center; color:#15803d;">এডমিন লগইন</h2>
-        <input type="email" id="email" placeholder="আপনার ইমেইল">
-        <input type="password" id="password" placeholder="পাসওয়ার্ড">
-        <button onclick="login()">ড্যাশবোর্ডে প্রবেশ করুন</button>
+  <div id="auth-view" class="view">
+    <div class="login-box">
+      <h2 style="color: var(--primary);">জীবন সেবা ফার্মেসি</h2>
+      <p style="color: gray;">লগইন করুন</p>
+      <form id="loginForm">
+        <label>ইমেইল</label>
+        <input type="email" id="email" placeholder="admin@email.com" required>
+        <label>পাসওয়ার্ড</label>
+        <input type="password" id="pass" placeholder="******" required>
+        <button type="submit" class="primary" style="width:100%; margin-top:15px; padding:12px">প্রবেশ করুন</button>
+      </form>
+      <p id="loginError" style="color:red; font-size:13px; margin-top:10px"></p>
     </div>
+  </div>
 
-    <div id="dashboard">
-        <button class="excel-btn" onclick="exportToExcel()">📊 ডাউনলোড এক্সেল রিপোর্ট (বকেয়া তালিকা)</button>
-        
-        <h3>নতুন কাস্টমার যোগ</h3>
-        <input type="text" id="custName" placeholder="কাস্টমারের নাম">
-        <input type="text" id="fatherName" placeholder="পিতার নাম">
-        <input type="number" id="phone" placeholder="মোবাইল নম্বর">
-        <input type="number" id="dueAmount" placeholder="বকেয়া টাকা">
-        <button onclick="saveCustomer()">ডাটা সেভ করুন</button>
-        
-        <hr>
-        <h3>🔍 কাস্টমার খুঁজুন</h3>
-        <input type="text" id="search" class="search-box" onkeyup="searchCustomer()" placeholder="নাম বা মোবাইল লিখে টাইপ করুন...">
-        
-        <div id="customerList">লোডিং...</div>
-        
-        <button onclick="logout()" style="background:#475569; margin-top:30px;">লগ আউট</button>
-    </div>
-</div>
+  <div id="app-content" style="display:none">
+    <header>
+      <h1>জীবন সেবা ফার্মেসি</h1>
+      <p>প্রো: Md. Motiur Rahman (Sujal)</p>
+    </header>
 
-<script>
-    // আমি আপনার আসল API Key এবং সব তথ্য বসিয়ে দিয়েছি
+    <nav>
+      <button data-route="home">হোম</button>
+      <button data-route="customers">কাস্টমার লিস্ট</button>
+      <button data-route="add">নতুন কাস্টমার</button>
+      <button class="danger" id="logoutBtn">লগআউট</button>
+    </nav>
+
+    <main>
+      <section id="view-home" class="view">
+        <div class="card" style="text-align:center">
+          <h2>স্বাগতম!</h2>
+          <p>আপনার দোকানের সব ডাটা অনলাইনে সুরক্ষিত আছে।</p>
+          <hr>
+          <button class="success" id="downloadExcel" style="width:100%; padding:15px; font-size:18px;">📥 পুরো দোকানের এক্সেল রিপোর্ট ডাউনলোড</button>
+          <p style="font-size:12px; color:gray; margin-top:5px;">(সবার নাম, ঠিকানা, ফোন ও মোট বকেয়া একসাথে আসবে)</p>
+        </div>
+      </section>
+
+      <section id="view-customers" class="view">
+        <input id="searchBox" placeholder="নাম বা ফোন দিয়ে সার্চ করুন..." style="margin-bottom:15px">
+        <div id="customerGrid" class="grid"></div>
+      </section>
+
+      <section id="view-add" class="view">
+        <div class="card">
+          <h3>নতুন কাস্টমার যোগ করুন</h3>
+          <form id="addForm">
+            <label>কাস্টমারের নাম</label> <input name="name" required />
+            <label>পিতার নাম</label> <input name="fatherName" />
+            <label>গ্রাম/ঠিকানা</label> <input name="village" />
+            <label>ফোন নম্বর</label> <input name="phone" />
+            <button class="primary" type="submit" style="margin-top:15px">সংরক্ষণ করুন</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="view-detail" class="view">
+        <div class="card">
+          <h2 id="cName">নাম</h2>
+          <p id="cInfo" style="color:gray"></p>
+          <div id="commActions" style="margin: 10px 0;"></div>
+          <hr>
+          <h3>লেনদেন / টাকা জমা যোগ করুন</h3>
+          <p style="font-size: 12px; color: green;">* টাকা জমা দিলে টাকার আগে মাইনাস (-) চিহ্ন দিন (উদা: -500)</p>
+          <form id="saleForm" style="display:flex; gap:10px; flex-wrap:wrap">
+            <input type="date" name="date" required style="width:auto">
+            <input type="text" name="product" placeholder="বিবরণ" required style="flex:1">
+            <input type="number" name="price" placeholder="টাকা" required style="width:100px">
+            <button class="primary" type="submit">যোগ করুন</button>
+          </form>
+          <hr>
+          <h3>হিসাবের তালিকা</h3>
+          <div id="salesList"></div>
+          <h3 id="grandTotal" style="text-align:right; color: #ef4444;">মোট বকেয়া: ৳০</h3>
+          <button class="danger" id="deleteCustomerBtn" style="margin-top:20px">কাস্টমার ডিলিট করুন</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Developed by: Fahim Shahriar Jaman</p>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
     const firebaseConfig = {
-        apiKey: "AIzaSyAs-some-key-found-from-logs", // আপনার রিয়েল কি এখানে কাজ করবে
-        authDomain: "pharmacy-upv2.firebaseapp.com",
-        databaseURL: "https://pharmacy-upv2-default-rtdb.firebaseio.com",
-        projectId: "pharmacy-upv2",
-        storageBucket: "pharmacy-upv2.appspot.com",
-        messagingSenderId: "1056586326177",
-        appId: "1:1056586326177:web:fb09618059086e3390231d"
+      apiKey: "AIzaSyAv8kkam_BMPh9e3HbZboxV8P-DgcIodB4",
+      authDomain: "pharmacy-management-b8af1.firebaseapp.com",
+      projectId: "pharmacy-management-b8af1",
+      storageBucket: "pharmacy-management-b8af1.firebasestorage.app",
+      messagingSenderId: "999414606702",
+      appId: "1:999414606702:web:4086b909849b32b3d22f7f"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    function login() {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('password').value;
-        auth.signInWithEmailAndPassword(email, pass).then(() => {
-            document.getElementById('login-form').style.display='none';
-            document.getElementById('dashboard').style.display='block';
-            fetchData();
-        }).catch(() => alert("ভুল ইমেইল বা পাসওয়ার্ড!"));
+    let allCustomers = [];
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("auth-view").classList.remove("active");
+        document.getElementById("app-content").style.display = "block";
+        navigate("home");
+        loadCustomers();
+      } else {
+        document.getElementById("auth-view").classList.add("active");
+        document.getElementById("app-content").style.display = "none";
+      }
+    });
+
+    document.getElementById("loginForm").onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("pass").value);
+      } catch (err) {
+        document.getElementById("loginError").textContent = "ভুল ইমেইল বা পাসওয়ার্ড!";
+      }
+    };
+
+    document.getElementById("logoutBtn").onclick = () => signOut(auth);
+
+    function navigate(route) {
+      document.querySelectorAll("main .view").forEach(v => v.classList.remove("active"));
+      document.getElementById("view-" + route).classList.add("active");
     }
 
-    function saveCustomer() {
-        const name = document.getElementById('custName').value;
-        const father = document.getElementById('fatherName').value;
-        const phone = document.getElementById('phone').value;
-        const due = parseFloat(document.getElementById('dueAmount').value);
-        if(name && !isNaN(due)) {
-            db.ref('customers').push({
-                name: name, father: father, phone: phone, due: due, date: new Date().toLocaleDateString('bn-BD')
-            });
-            alert("সফলভাবে সেভ হয়েছে!");
-            document.querySelectorAll('input:not(#search)').forEach(i => i.value = '');
-        }
+    document.querySelectorAll("nav button[data-route]").forEach(btn => {
+      btn.onclick = () => navigate(btn.dataset.route);
+    });
+
+    document.getElementById("addForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      await addDoc(collection(db, "customers"), { 
+        name: f.name.value, 
+        fatherName: f.fatherName.value, 
+        village: f.village.value, 
+        phone: f.phone.value, 
+        createdAt: Date.now() 
+      });
+      f.reset();
+      navigate("customers");
+    };
+
+    function loadCustomers() {
+      onSnapshot(collection(db, "customers"), (snap) => {
+        allCustomers = [];
+        snap.forEach(docSnap => allCustomers.push({id: docSnap.id, ...docSnap.data()}));
+        renderCustomerGrid(allCustomers);
+      });
     }
 
-    let excelData = [];
+    function renderCustomerGrid(data) {
+      const grid = document.getElementById("customerGrid");
+      grid.innerHTML = "";
+      data.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `<h4>${c.name}</h4><p>ফোন: ${c.phone || 'নেই'}</p><button class="primary">বিস্তারিত</button>`;
+        div.querySelector("button").onclick = () => openCustomer(c.id, c);
+        grid.appendChild(div);
+      });
+    }
 
-    function fetchData() {
-        db.ref('customers').on('value', (snap) => {
-            const list = document.getElementById('customerList');
-            list.innerHTML = '';
-            excelData = [];
-            snap.forEach((child) => {
-                const data = child.val();
-                const id = child.key;
-                excelData.push({ "নাম": data.name, "পিতা": data.father, "মোবাইল": data.phone, "বকেয়া": data.due, "তারিখ": data.date });
-                
-                list.innerHTML += `
-                <div class="customer-card">
-                    <b>${data.name}</b> <small>(পিতা: ${data.father || 'নেই'})</small><br>
-                    📞 ${data.phone || 'নম্বর নেই'}<br>
-                    <span class="due-text">বাকি: ${data.due} টাকা</span><br>
-                    <div class="btn-group">
-                        <button class="btn-sm bg-wa" onclick="sendWA('${data.phone}', ${data.due})">WhatsApp</button>
-                        <button class="btn-sm bg-pay" onclick="pay('${id}', ${data.due})">টাকা জমা</button>
-                        <button class="btn-sm bg-del" onclick="del('${id}')">মুছুন</button>
-                    </div>
-                </div>`;
-            });
+    document.getElementById("searchBox").oninput = (e) => {
+      const term = e.target.value.toLowerCase();
+      const filtered = allCustomers.filter(c => 
+        c.name.toLowerCase().includes(term) || (c.phone && c.phone.includes(term))
+      );
+      renderCustomerGrid(filtered);
+    };
+
+    async function openCustomer(id, data) {
+      document.getElementById("cName").textContent = data.name;
+      document.getElementById("cInfo").textContent = `পিতা: ${data.fatherName || 'নেই'} | গ্রাম: ${data.village} | ফোন: ${data.phone}`;
+      
+      const phone = data.phone;
+      const commBox = document.getElementById("commActions");
+      commBox.innerHTML = phone ? `
+        <a href="tel:${phone}" class="comm-btn" style="background:#3b82f6">📞 কল</a>
+        <a href="https://wa.me/88${phone}" class="comm-btn" style="background:#25d366">💬 WhatsApp</a>
+        <a href="sms:${phone}" class="comm-btn" style="background:#6366f1">✉️ SMS</a>
+      ` : `<p style="color:red; font-size:12px">ফোন নম্বর নেই</p>`;
+
+      window.currentCustomerId = id;
+      navigate("detail");
+      const q = query(collection(db, "sales"), where("customerId", "==", id));
+      onSnapshot(q, (snap) => {
+        const list = document.getElementById("salesList");
+        list.innerHTML = "";
+        let total = 0;
+        snap.forEach(d => {
+          const s = d.data();
+          total += s.price;
+          const row = document.createElement("div");
+          row.className = "row";
+          row.innerHTML = `<span>${s.date}: ${s.product} (৳${s.price})</span><button class="danger" style="padding:4px 8px; font-size:10px" onclick="deleteSale('${d.id}')">মুছুন</button>`;
+          list.appendChild(row);
         });
+        document.getElementById("grandTotal").textContent = `মোট বকেয়া: ৳${total}`;
+      });
     }
 
-    function searchCustomer() {
-        let val = document.getElementById('search').value.toLowerCase();
-        let cards = document.getElementsByClassName('customer-card');
-        for (let i = 0; i < cards.length; i++) {
-            cards[i].style.display = cards[i].innerText.toLowerCase().includes(val) ? "" : "none";
-        }
-    }
+    window.deleteSale = async (id) => {
+      if(confirm("লেনদেনটি মুছতে চান?")) await deleteDoc(doc(db, "sales", id));
+    };
 
-    function exportToExcel() {
-        const ws = XLSX.utils.json_to_sheet(excelData);
+    document.getElementById("saleForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const f = e.target;
+      await addDoc(collection(db, "sales"), { customerId: window.currentCustomerId, date: f.date.value, product: f.product.value, price: Number(f.price.value) });
+      f.reset();
+    };
+
+    // --- এই অংশটি ২৫০+ কাস্টমারের সব ডাটা এক্সেল করার জন্য ---
+    document.getElementById("downloadExcel").onclick = async () => {
+      const btn = document.getElementById("downloadExcel");
+      btn.textContent = "অপেক্ষা করুন... ডাটা তৈরি হচ্ছে";
+      btn.disabled = true;
+
+      try {
+        const reportData = [];
+        const customersSnap = await getDocs(collection(db, "customers"));
+        const allSalesSnap = await getDocs(collection(db, "sales"));
+        
+        // বিক্রির ডাটাগুলোকে কাস্টমার আইডি অনুযায়ী সাজানো (যাতে দ্রুত হিসাব হয়)
+        const salesByCustomer = {};
+        allSalesSnap.forEach(sDoc => {
+          const s = sDoc.data();
+          if(!salesByCustomer[s.customerId]) salesByCustomer[s.customerId] = 0;
+          salesByCustomer[s.customerId] += s.price;
+        });
+
+        // রিপোর্ট ডাটা তৈরি
+        customersSnap.forEach(cDoc => {
+          const c = cDoc.data();
+          const totalDue = salesByCustomer[cDoc.id] || 0;
+          
+          reportData.push({
+            "কাস্টমারের নাম": c.name,
+            "পিতার নাম": c.fatherName || "নেই",
+            "ঠিকানা/গ্রাম": c.village || "নেই",
+            "ফোন নম্বর": c.phone || "নেই",
+            "মোট বকেয়া (৳)": totalDue
+          });
+        });
+
+        const ws = XLSX.utils.json_to_sheet(reportData);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Baki Report");
-        XLSX.writeFile(wb, "Pharmacy_Report.xlsx");
-    }
+        XLSX.utils.book_append_sheet(wb, ws, "দোকান রিপোর্ট");
+        XLSX.writeFile(wb, "Jibon_Seba_Pharmacy_Baki_Report.xlsx");
+      } catch (error) {
+        alert("এক্সেল তৈরি করতে সমস্যা হয়েছে!");
+      }
 
-    function sendWA(num, amt) { window.open(`https://wa.me/88${num}?text=জীবন সেবা ফার্মেসি: আপনার বকেয়া ${amt} টাকা।`); }
-    
-    function pay(id, current) {
-        const p = parseFloat(prompt("কত টাকা জমা দিল?"));
-        if(p > 0 && p <= current) db.ref('customers/' + id).update({ due: current - p });
-    }
+      btn.textContent = "📊 পুরো দোকানের এক্সেল রিপোর্ট ডাউনলোড";
+      btn.disabled = false;
+    };
 
-    function del(id) { if(confirm("মুছবেন?")) db.ref('customers/' + id).remove(); }
-    function logout() { auth.signOut().then(() => location.reload()); }
-</script>
+    document.getElementById("deleteCustomerBtn").onclick = async () => {
+      if(confirm("কাস্টমার ডিলিট করলে সব ডাটা চলে যাবে। নিশ্চিত?")) {
+        await deleteDoc(doc(db, "customers", window.currentCustomerId));
+        navigate("customers");
+      }
+    };
+  </script>
 </body>
 </html>
