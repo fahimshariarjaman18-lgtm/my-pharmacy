@@ -34,37 +34,24 @@
     .row{background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:10px; margin:6px 0; display:flex; justify-content:space-between; align-items:center}
     footer{text-align:center; padding:20px; font-size:12px; opacity:0.7}
     
-    #auth-view{ display: none; justify-content: center; align-items: center; height: 100vh; position: fixed; top: 0; left: 0; width: 100%; background: var(--bg); z-index: 1000; }
-    #auth-view.active { display: flex; }
-    .login-box{ background: white; color: black; padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; }
-    .comm-btn{ padding: 8px; border-radius: 8px; text-decoration: none; color: white; font-size: 12px; display: inline-block; margin-right: 5px; }
-    .stat-box{ display: flex; gap: 10px; margin-bottom: 15px; }
-    .stat-card{ flex: 1; padding: 15px; border-radius: 10px; text-align: center; color: white; }
-    
-    
-    .total-baki-box {
-      background: #ef4444;
-      color: white;
-      padding: 20px;
-      border-radius: 16px;
-      margin-bottom: 20px;
-      text-align: center;
-      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-    }
+    .total-baki-box { background: #ef4444; color: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
     .total-baki-box h2 { margin: 0; font-size: 32px; }
+    .action-group { display: flex; gap: 10px; margin-top: 10px; }
+    .action-group button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; color: white; }
+    .btn-baki { background: #ef4444; }
+    .btn-joma { background: #10b981; }
+    .comm-btn{ padding: 8px; border-radius: 8px; text-decoration: none; color: white; font-size: 12px; display: inline-block; margin-right: 5px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
-  <div id="auth-view" class="view">
-    <div class="login-box">
+  <div id="auth-view" class="view" style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+    <div style="background: white; color: black; padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center;">
       <h2 style="color: var(--primary);">জীবন সেবা ফার্মেসি</h2>
       <form id="loginForm">
-        <label>ইমেইল</label>
-        <input type="email" id="email" placeholder="admin@email.com" required>
-        <label>পাসওয়ার্ড</label>
-        <input type="password" id="pass" placeholder="******" required>
+        <label>ইমেইল</label> <input type="email" id="email" placeholder="admin@email.com" required>
+        <label>পাসওয়ার্ড</label> <input type="password" id="pass" placeholder="******" required>
         <button type="submit" class="primary" style="width:100%; margin-top:15px; padding:12px">প্রবেশ করুন</button>
       </form>
       <p id="loginError" style="color:red; font-size:13px; margin-top:10px"></p>
@@ -74,7 +61,7 @@
   <div id="app-content" style="display:none">
     <header>
       <h1>জীবন সেবা ফার্মেসি</h1>
-      <p>প্রো:মো:মতিউর  রহমান (সুজাল)</p>
+      <p>প্রো: মোঃ মতিউর রহমান (সুজাল)</p>
     </header>
 
     <nav>
@@ -91,10 +78,8 @@
           <p style="margin:0; opacity:0.9;">দোকানের মোট বকেয়া (সব কাস্টমার)</p>
           <h2 id="allOverTotal">৳০</h2>
         </div>
-
         <div class="card" style="text-align:center">
           <button class="success" id="downloadExcel" style="width:100%; padding:15px; font-size:18px;">📥 পুরো দোকানের এক্সেল রিপোর্ট ডাউনলোড</button>
-          <p style="font-size:12px; color:gray; margin-top:5px;">(সবার নাম, ঠিকানা, ফোন ও বকেয়া একসাথে)</p>
         </div>
       </section>
 
@@ -107,15 +92,6 @@
         <div class="card">
           <h3>📅 দৈনিক লেনদেনের হিসাব</h3>
           <input type="date" id="reportDate" style="margin-bottom:15px">
-          
-          <div class="stat-box">
-            <div class="stat-card" style="background: #3b82f6;">
-                <small>নতুন বাকি</small><br><b id="dayBaki">৳০</b>
-            </div>
-            <div class="stat-card" style="background: #10b981;">
-                <small>মোট জমা</small><br><b id="dayJoma">৳০</b>
-            </div>
-          </div>
           <div id="dayList"></div>
         </div>
       </section>
@@ -139,25 +115,27 @@
           <p id="cInfo" style="color:gray"></p>
           <div id="commActions" style="margin: 10px 0;"></div>
           <hr>
-          <h3>লেনদেন / টাকা জমা যোগ করুন</h3>
-          <form id="saleForm" style="display:flex; gap:10px; flex-wrap:wrap">
-            <input type="date" name="date" required id="defaultDate" style="width:auto">
-            <input type="text" name="product" placeholder="বিবরণ" required style="flex:1">
-            <input type="number" name="price" placeholder="টাকা" required style="width:100px">
-            <button class="primary" type="submit">যোগ করুন</button>
-          </form>
+          
+          <h3>লেনদেন এন্ট্রি</h3>
+          <input type="date" id="entryDate" style="margin-bottom:10px">
+          <input type="text" id="entryDesc" placeholder="বিবরণ (উদা: নাপা/জমা)">
+          <input type="number" id="entryAmount" placeholder="টাকার পরিমাণ">
+          
+          <div class="action-group">
+            <button class="btn-baki" onclick="saveEntry('baki')">➕ বাকি যোগ করুন</button>
+            <button class="btn-joma" onclick="saveEntry('joma')">➖ টাকা জমা নিন</button>
+          </div>
+
           <hr>
           <h3>হিসাবের তালিকা</h3>
           <div id="salesList"></div>
           <h3 id="grandTotal" style="text-align:right; color: #ef4444;">বকেয়া: ৳০</h3>
-          <button class="danger" id="deleteCustomerBtn" style="margin-top:20px">কাস্টমার ডিলিট করুন</button>
+          <button class="danger" id="deleteCustomerBtn" style="margin-top:20px; width:100%">কাস্টমার ডিলিট করুন</button>
         </div>
       </section>
     </main>
 
-    <footer>
-      <p>Developed by: Fahim Shahriar Jaman</p>
-    </footer>
+    <footer><p>Developed by: Fahim Shahriar Jaman</p></footer>
   </div>
 
   <script type="module">
@@ -179,39 +157,33 @@
     const db = getFirestore(app);
 
     let allCustomers = [];
-    document.getElementById("defaultDate").valueAsDate = new Date();
-    document.getElementById("reportDate").valueAsDate = new Date();
-
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        document.getElementById("auth-view").classList.remove("active");
+        document.getElementById("auth-view").style.display = "none";
         document.getElementById("app-content").style.display = "block";
+        document.getElementById("entryDate").valueAsDate = new Date();
+        document.getElementById("reportDate").valueAsDate = new Date();
         navigate("home");
         loadCustomers();
-        loadAllOverTotal(); // মোট বাকি লোড হবে
+        loadAllOverTotal();
         loadDailyReport(document.getElementById("reportDate").value);
       } else {
-        document.getElementById("auth-view").classList.add("active");
+        document.getElementById("auth-view").style.display = "flex";
         document.getElementById("app-content").style.display = "none";
       }
     });
 
-    // সব কাস্টমার মিলিয়ে মোট বকেয়া বের করার ফাংশন
     function loadAllOverTotal() {
       onSnapshot(collection(db, "sales"), (snap) => {
-        let grandTotal = 0;
-        snap.forEach(d => grandTotal += d.data().price);
-        document.getElementById("allOverTotal").textContent = `৳${grandTotal}`;
+        let total = 0; snap.forEach(d => total += d.data().price);
+        document.getElementById("allOverTotal").textContent = `৳${total}`;
       });
     }
 
     document.getElementById("loginForm").onsubmit = async (e) => {
       e.preventDefault();
-      try {
-        await signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("pass").value);
-      } catch (err) {
-        document.getElementById("loginError").textContent = "ভুল ইমেইল বা পাসওয়ার্ড!";
-      }
+      try { await signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("pass").value); } 
+      catch (err) { alert("ভুল ইমেইল বা পাসওয়ার্ড!"); }
     };
 
     document.getElementById("logoutBtn").onclick = () => signOut(auth);
@@ -228,27 +200,21 @@
     document.getElementById("addForm").onsubmit = async (e) => {
       e.preventDefault();
       const f = e.target;
-      await addDoc(collection(db, "customers"), { 
-        name: f.name.value, fatherName: f.fatherName.value, village: f.village.value, phone: f.phone.value, createdAt: Date.now() 
-      });
-      f.reset();
-      navigate("customers");
+      await addDoc(collection(db, "customers"), { name: f.name.value, fatherName: f.fatherName.value, village: f.village.value, phone: f.phone.value, createdAt: Date.now() });
+      f.reset(); navigate("customers");
     };
 
     function loadCustomers() {
       onSnapshot(collection(db, "customers"), (snap) => {
-        allCustomers = [];
-        snap.forEach(docSnap => allCustomers.push({id: docSnap.id, ...docSnap.data()}));
+        allCustomers = []; snap.forEach(d => allCustomers.push({id: d.id, ...d.data()}));
         renderCustomerGrid(allCustomers);
       });
     }
 
     function renderCustomerGrid(data) {
-      const grid = document.getElementById("customerGrid");
-      grid.innerHTML = "";
+      const grid = document.getElementById("customerGrid"); grid.innerHTML = "";
       data.forEach(c => {
-        const div = document.createElement("div");
-        div.className = "card";
+        const div = document.createElement("div"); div.className = "card";
         div.innerHTML = `<h4>${c.name}</h4><p>ফোন: ${c.phone || 'নেই'}</p><button class="primary">বিস্তারিত</button>`;
         div.querySelector("button").onclick = () => openCustomer(c.id, c);
         grid.appendChild(div);
@@ -257,36 +223,23 @@
 
     document.getElementById("searchBox").oninput = (e) => {
       const term = e.target.value.toLowerCase();
-      const filtered = allCustomers.filter(c => 
-        c.name.toLowerCase().includes(term) || (c.phone && c.phone.includes(term))
-      );
-      renderCustomerGrid(filtered);
+      renderCustomerGrid(allCustomers.filter(c => c.name.toLowerCase().includes(term) || (c.phone && c.phone.includes(term))));
     };
 
     async function openCustomer(id, data) {
       document.getElementById("cName").textContent = data.name;
       document.getElementById("cInfo").textContent = `পিতা: ${data.fatherName || 'নেই'} | গ্রাম: ${data.village} | ফোন: ${data.phone}`;
-      
-      const phone = data.phone;
       const commBox = document.getElementById("commActions");
-      commBox.innerHTML = phone ? `
-        <a href="tel:${phone}" class="comm-btn" style="background:#3b82f6">📞 কল</a>
-        <a href="https://wa.me/88${phone}" class="comm-btn" style="background:#25d366">💬 WhatsApp</a>
-        <a href="sms:${phone}" class="comm-btn" style="background:#6366f1">✉️ SMS</a>
-      ` : `<p style="color:red; font-size:12px">ফোন নম্বর নেই</p>`;
-
+      commBox.innerHTML = data.phone ? `<a href="tel:${data.phone}" class="comm-btn" style="background:#3b82f6">📞 কল</a> <a href="https://wa.me/88${data.phone}" class="comm-btn" style="background:#25d366">💬 WhatsApp</a>` : '';
+      
       window.currentCustomerId = id;
       navigate("detail");
-      const q = query(collection(db, "sales"), where("customerId", "==", id));
-      onSnapshot(q, (snap) => {
-        const list = document.getElementById("salesList");
-        list.innerHTML = "";
+      onSnapshot(query(collection(db, "sales"), where("customerId", "==", id)), (snap) => {
+        const list = document.getElementById("salesList"); list.innerHTML = "";
         let total = 0;
         snap.forEach(d => {
-          const s = d.data();
-          total += s.price;
-          const row = document.createElement("div");
-          row.className = "row";
+          const s = d.data(); total += s.price;
+          const row = document.createElement("div"); row.className = "row";
           row.innerHTML = `<span>${s.date}: ${s.product} (৳${s.price})</span><button class="danger" style="padding:4px 8px; font-size:10px" onclick="deleteSale('${d.id}')">মুছুন</button>`;
           list.appendChild(row);
         });
@@ -294,71 +247,48 @@
       });
     }
 
-    document.getElementById("reportDate").onchange = (e) => loadDailyReport(e.target.value);
+    window.saveEntry = async (type) => {
+      const date = document.getElementById("entryDate").value;
+      const desc = document.getElementById("entryDesc").value;
+      let amount = Number(document.getElementById("entryAmount").value);
+      if(!desc || !amount) return alert("বিবরণ ও টাকা দিন");
+      
+   
+      if(type === 'joma') amount = -Math.abs(amount);
+      else amount = Math.abs(amount);
 
-    async function loadDailyReport(selectedDate) {
-      const q = query(collection(db, "sales"), where("date", "==", selectedDate));
-      onSnapshot(q, async (snap) => {
-        const list = document.getElementById("dayList");
-        list.innerHTML = "";
-        let dayBaki = 0, dayJoma = 0;
-        for (const sDoc of snap.docs) {
-          const s = sDoc.data();
-          const cust = allCustomers.find(c => c.id === s.customerId);
-          if (s.price > 0) dayBaki += s.price; else dayJoma += Math.abs(s.price);
-          const row = document.createElement("div");
-          row.className = "row";
-          row.innerHTML = `<div><b>${cust ? cust.name : 'Unknown'}</b><br><small>${s.product}</small></div><b>${s.price > 0 ? '+' : ''}${s.price}</b>`;
+      await addDoc(collection(db, "sales"), { customerId: window.currentCustomerId, date, product: desc, price: amount });
+      document.getElementById("entryDesc").value = "";
+      document.getElementById("entryAmount").value = "";
+    };
+
+    window.deleteSale = async (id) => { if(confirm("মুছতে চান?")) await deleteDoc(doc(db, "sales", id)); };
+
+    document.getElementById("reportDate").onchange = (e) => loadDailyReport(e.target.value);
+    function loadDailyReport(d) {
+      onSnapshot(query(collection(db, "sales"), where("date", "==", d)), (snap) => {
+        const list = document.getElementById("dayList"); list.innerHTML = "";
+        snap.forEach(sDoc => {
+          const s = sDoc.data(); const cust = allCustomers.find(c => c.id === s.customerId);
+          const row = document.createElement("div"); row.className = "row";
+          row.innerHTML = `<div><b>${cust ? cust.name : 'Unknown'}</b><br><small>${s.product}</small></div><b style="color:${s.price > 0 ? 'red':'green'}">${s.price}</b>`;
           list.appendChild(row);
-        }
-        document.getElementById("dayBaki").textContent = `৳${dayBaki}`;
-        document.getElementById("dayJoma").textContent = `৳${dayJoma}`;
+        });
       });
     }
 
-    window.deleteSale = async (id) => {
-      if(confirm("লেনদেনটি মুছতে চান?")) await deleteDoc(doc(db, "sales", id));
-    };
-
-    document.getElementById("saleForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const f = e.target;
-      await addDoc(collection(db, "sales"), { customerId: window.currentCustomerId, date: f.date.value, product: f.product.value, price: Number(f.price.value) });
-      f.reset();
-      document.getElementById("defaultDate").valueAsDate = new Date();
-    };
-
     document.getElementById("downloadExcel").onclick = async () => {
-      const btn = document.getElementById("downloadExcel");
-      btn.textContent = "ডাটা তৈরি হচ্ছে...";
-      const reportData = [];
-      const customersSnap = await getDocs(collection(db, "customers"));
-      const allSalesSnap = await getDocs(collection(db, "sales"));
-      const salesByCustomer = {};
-      allSalesSnap.forEach(sDoc => {
-        const s = sDoc.data();
-        if(!salesByCustomer[s.customerId]) salesByCustomer[s.customerId] = 0;
-        salesByCustomer[s.customerId] += s.price;
-      });
-      customersSnap.forEach(cDoc => {
-        const c = cDoc.data();
-        reportData.push({
-          "নাম": c.name, "পিতা": c.fatherName || "নেই", "ঠিকানা": c.village || "নেই", "ফোন": c.phone || "নেই", "বকেয়া (৳)": salesByCustomer[cDoc.id] || 0
-        });
-      });
-      const ws = XLSX.utils.json_to_sheet(reportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "রিপোর্ট");
-      XLSX.writeFile(wb, "Pharmacy_Baki_Report.xlsx");
-      btn.textContent = "📥 পুরো দোকানের এক্সেল রিপোর্ট ডাউনলোড";
+      const report = [];
+      const customers = await getDocs(collection(db, "customers"));
+      const sales = await getDocs(collection(db, "sales"));
+      const balances = {};
+      sales.forEach(s => { const d = s.data(); balances[d.customerId] = (balances[d.customerId] || 0) + d.price; });
+      customers.forEach(c => { const d = c.data(); report.push({ "নাম": d.name, "ঠিকানা": d.village, "ফোন": d.phone, "বকেয়া": balances[c.id] || 0 }); });
+      const ws = XLSX.utils.json_to_sheet(report); const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "রিপোর্ট"); XLSX.writeFile(wb, "Report.xlsx");
     };
 
-    document.getElementById("deleteCustomerBtn").onclick = async () => {
-      if(confirm("কাস্টমার ডিলিট করলে সব ডাটা চলে যাবে। নিশ্চিত?")) {
-        await deleteDoc(doc(db, "customers", window.currentCustomerId));
-        navigate("customers");
-      }
-    };
+    document.getElementById("deleteCustomerBtn").onclick = async () => { if(confirm("ডিলিট নিশ্চিত?")) { await deleteDoc(doc(db, "customers", window.currentCustomerId)); navigate("customers"); } };
   </script>
 </body>
 </html>
