@@ -38,6 +38,20 @@
     #auth-view.active { display: flex; }
     .login-box{ background: white; color: black; padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; }
     .comm-btn{ padding: 8px; border-radius: 8px; text-decoration: none; color: white; font-size: 12px; display: inline-block; margin-right: 5px; }
+    .stat-box{ display: flex; gap: 10px; margin-bottom: 15px; }
+    .stat-card{ flex: 1; padding: 15px; border-radius: 10px; text-align: center; color: white; }
+    
+    
+    .total-baki-box {
+      background: #ef4444;
+      color: white;
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+    .total-baki-box h2 { margin: 0; font-size: 32px; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -46,7 +60,6 @@
   <div id="auth-view" class="view">
     <div class="login-box">
       <h2 style="color: var(--primary);">জীবন সেবা ফার্মেসি</h2>
-      <p style="color: gray;">লগইন করুন</p>
       <form id="loginForm">
         <label>ইমেইল</label>
         <input type="email" id="email" placeholder="admin@email.com" required>
@@ -61,30 +74,50 @@
   <div id="app-content" style="display:none">
     <header>
       <h1>জীবন সেবা ফার্মেসি</h1>
-      <p>প্রো: Md. Motiur Rahman (Sujal)</p>
+      <p>প্রো:মো:মতিউর  রহমান (সুজাল)</p>
     </header>
 
     <nav>
       <button data-route="home">হোম</button>
       <button data-route="customers">কাস্টমার লিস্ট</button>
+      <button data-route="report">ডেইলি রিপোর্ট</button>
       <button data-route="add">নতুন কাস্টমার</button>
       <button class="danger" id="logoutBtn">লগআউট</button>
     </nav>
 
     <main>
       <section id="view-home" class="view">
+        <div class="total-baki-box">
+          <p style="margin:0; opacity:0.9;">দোকানের মোট বকেয়া (সব কাস্টমার)</p>
+          <h2 id="allOverTotal">৳০</h2>
+        </div>
+
         <div class="card" style="text-align:center">
-          <h2>স্বাগতম!</h2>
-          <p>আপনার দোকানের সব ডাটা অনলাইনে সুরক্ষিত আছে।</p>
-          <hr>
           <button class="success" id="downloadExcel" style="width:100%; padding:15px; font-size:18px;">📥 পুরো দোকানের এক্সেল রিপোর্ট ডাউনলোড</button>
-          <p style="font-size:12px; color:gray; margin-top:5px;">(সবার নাম, ঠিকানা, ফোন ও মোট বকেয়া একসাথে আসবে)</p>
+          <p style="font-size:12px; color:gray; margin-top:5px;">(সবার নাম, ঠিকানা, ফোন ও বকেয়া একসাথে)</p>
         </div>
       </section>
 
       <section id="view-customers" class="view">
         <input id="searchBox" placeholder="নাম বা ফোন দিয়ে সার্চ করুন..." style="margin-bottom:15px">
         <div id="customerGrid" class="grid"></div>
+      </section>
+
+      <section id="view-report" class="view">
+        <div class="card">
+          <h3>📅 দৈনিক লেনদেনের হিসাব</h3>
+          <input type="date" id="reportDate" style="margin-bottom:15px">
+          
+          <div class="stat-box">
+            <div class="stat-card" style="background: #3b82f6;">
+                <small>নতুন বাকি</small><br><b id="dayBaki">৳০</b>
+            </div>
+            <div class="stat-card" style="background: #10b981;">
+                <small>মোট জমা</small><br><b id="dayJoma">৳০</b>
+            </div>
+          </div>
+          <div id="dayList"></div>
+        </div>
       </section>
 
       <section id="view-add" class="view">
@@ -107,9 +140,8 @@
           <div id="commActions" style="margin: 10px 0;"></div>
           <hr>
           <h3>লেনদেন / টাকা জমা যোগ করুন</h3>
-          <p style="font-size: 12px; color: green;">* টাকা জমা দিলে টাকার আগে মাইনাস (-) চিহ্ন দিন (উদা: -500)</p>
           <form id="saleForm" style="display:flex; gap:10px; flex-wrap:wrap">
-            <input type="date" name="date" required style="width:auto">
+            <input type="date" name="date" required id="defaultDate" style="width:auto">
             <input type="text" name="product" placeholder="বিবরণ" required style="flex:1">
             <input type="number" name="price" placeholder="টাকা" required style="width:100px">
             <button class="primary" type="submit">যোগ করুন</button>
@@ -117,7 +149,7 @@
           <hr>
           <h3>হিসাবের তালিকা</h3>
           <div id="salesList"></div>
-          <h3 id="grandTotal" style="text-align:right; color: #ef4444;">মোট বকেয়া: ৳০</h3>
+          <h3 id="grandTotal" style="text-align:right; color: #ef4444;">বকেয়া: ৳০</h3>
           <button class="danger" id="deleteCustomerBtn" style="margin-top:20px">কাস্টমার ডিলিট করুন</button>
         </div>
       </section>
@@ -147,6 +179,8 @@
     const db = getFirestore(app);
 
     let allCustomers = [];
+    document.getElementById("defaultDate").valueAsDate = new Date();
+    document.getElementById("reportDate").valueAsDate = new Date();
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -154,11 +188,22 @@
         document.getElementById("app-content").style.display = "block";
         navigate("home");
         loadCustomers();
+        loadAllOverTotal(); // মোট বাকি লোড হবে
+        loadDailyReport(document.getElementById("reportDate").value);
       } else {
         document.getElementById("auth-view").classList.add("active");
         document.getElementById("app-content").style.display = "none";
       }
     });
+
+    // সব কাস্টমার মিলিয়ে মোট বকেয়া বের করার ফাংশন
+    function loadAllOverTotal() {
+      onSnapshot(collection(db, "sales"), (snap) => {
+        let grandTotal = 0;
+        snap.forEach(d => grandTotal += d.data().price);
+        document.getElementById("allOverTotal").textContent = `৳${grandTotal}`;
+      });
+    }
 
     document.getElementById("loginForm").onsubmit = async (e) => {
       e.preventDefault();
@@ -184,11 +229,7 @@
       e.preventDefault();
       const f = e.target;
       await addDoc(collection(db, "customers"), { 
-        name: f.name.value, 
-        fatherName: f.fatherName.value, 
-        village: f.village.value, 
-        phone: f.phone.value, 
-        createdAt: Date.now() 
+        name: f.name.value, fatherName: f.fatherName.value, village: f.village.value, phone: f.phone.value, createdAt: Date.now() 
       });
       f.reset();
       navigate("customers");
@@ -249,7 +290,29 @@
           row.innerHTML = `<span>${s.date}: ${s.product} (৳${s.price})</span><button class="danger" style="padding:4px 8px; font-size:10px" onclick="deleteSale('${d.id}')">মুছুন</button>`;
           list.appendChild(row);
         });
-        document.getElementById("grandTotal").textContent = `মোট বকেয়া: ৳${total}`;
+        document.getElementById("grandTotal").textContent = `বকেয়া: ৳${total}`;
+      });
+    }
+
+    document.getElementById("reportDate").onchange = (e) => loadDailyReport(e.target.value);
+
+    async function loadDailyReport(selectedDate) {
+      const q = query(collection(db, "sales"), where("date", "==", selectedDate));
+      onSnapshot(q, async (snap) => {
+        const list = document.getElementById("dayList");
+        list.innerHTML = "";
+        let dayBaki = 0, dayJoma = 0;
+        for (const sDoc of snap.docs) {
+          const s = sDoc.data();
+          const cust = allCustomers.find(c => c.id === s.customerId);
+          if (s.price > 0) dayBaki += s.price; else dayJoma += Math.abs(s.price);
+          const row = document.createElement("div");
+          row.className = "row";
+          row.innerHTML = `<div><b>${cust ? cust.name : 'Unknown'}</b><br><small>${s.product}</small></div><b>${s.price > 0 ? '+' : ''}${s.price}</b>`;
+          list.appendChild(row);
+        }
+        document.getElementById("dayBaki").textContent = `৳${dayBaki}`;
+        document.getElementById("dayJoma").textContent = `৳${dayJoma}`;
       });
     }
 
@@ -262,51 +325,32 @@
       const f = e.target;
       await addDoc(collection(db, "sales"), { customerId: window.currentCustomerId, date: f.date.value, product: f.product.value, price: Number(f.price.value) });
       f.reset();
+      document.getElementById("defaultDate").valueAsDate = new Date();
     };
 
-    // --- এই অংশটি ২৫০+ কাস্টমারের সব ডাটা এক্সেল করার জন্য ---
     document.getElementById("downloadExcel").onclick = async () => {
       const btn = document.getElementById("downloadExcel");
-      btn.textContent = "অপেক্ষা করুন... ডাটা তৈরি হচ্ছে";
-      btn.disabled = true;
-
-      try {
-        const reportData = [];
-        const customersSnap = await getDocs(collection(db, "customers"));
-        const allSalesSnap = await getDocs(collection(db, "sales"));
-        
-        // বিক্রির ডাটাগুলোকে কাস্টমার আইডি অনুযায়ী সাজানো (যাতে দ্রুত হিসাব হয়)
-        const salesByCustomer = {};
-        allSalesSnap.forEach(sDoc => {
-          const s = sDoc.data();
-          if(!salesByCustomer[s.customerId]) salesByCustomer[s.customerId] = 0;
-          salesByCustomer[s.customerId] += s.price;
+      btn.textContent = "ডাটা তৈরি হচ্ছে...";
+      const reportData = [];
+      const customersSnap = await getDocs(collection(db, "customers"));
+      const allSalesSnap = await getDocs(collection(db, "sales"));
+      const salesByCustomer = {};
+      allSalesSnap.forEach(sDoc => {
+        const s = sDoc.data();
+        if(!salesByCustomer[s.customerId]) salesByCustomer[s.customerId] = 0;
+        salesByCustomer[s.customerId] += s.price;
+      });
+      customersSnap.forEach(cDoc => {
+        const c = cDoc.data();
+        reportData.push({
+          "নাম": c.name, "পিতা": c.fatherName || "নেই", "ঠিকানা": c.village || "নেই", "ফোন": c.phone || "নেই", "বকেয়া (৳)": salesByCustomer[cDoc.id] || 0
         });
-
-        // রিপোর্ট ডাটা তৈরি
-        customersSnap.forEach(cDoc => {
-          const c = cDoc.data();
-          const totalDue = salesByCustomer[cDoc.id] || 0;
-          
-          reportData.push({
-            "কাস্টমারের নাম": c.name,
-            "পিতার নাম": c.fatherName || "নেই",
-            "ঠিকানা/গ্রাম": c.village || "নেই",
-            "ফোন নম্বর": c.phone || "নেই",
-            "মোট বকেয়া (৳)": totalDue
-          });
-        });
-
-        const ws = XLSX.utils.json_to_sheet(reportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "দোকান রিপোর্ট");
-        XLSX.writeFile(wb, "Jibon_Seba_Pharmacy_Baki_Report.xlsx");
-      } catch (error) {
-        alert("এক্সেল তৈরি করতে সমস্যা হয়েছে!");
-      }
-
-      btn.textContent = "📊 পুরো দোকানের এক্সেল রিপোর্ট ডাউনলোড";
-      btn.disabled = false;
+      });
+      const ws = XLSX.utils.json_to_sheet(reportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "রিপোর্ট");
+      XLSX.writeFile(wb, "Pharmacy_Baki_Report.xlsx");
+      btn.textContent = "📥 পুরো দোকানের এক্সেল রিপোর্ট ডাউনলোড";
     };
 
     document.getElementById("deleteCustomerBtn").onclick = async () => {
