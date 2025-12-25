@@ -2,154 +2,131 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8" />
-  <title>জীবন সেবা ফার্মেসি - অনলাইন</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>জীবন সেবা ফার্মেসি</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    :root{
-      --bg:#0f172a; --grad:#22c55e; --card:#ffffff; --text:#0f172a;
-      --muted:#64748b; --primary:#22c55e; --border:#e2e8f0;
+    :root {
+      --primary: #00b894;
+      --bg: #f0f3f7;
+      --card: #ffffff;
+      --text: #2d3436;
+      --danger: #d63031;
+      --radius: 20px;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0; color:#fff; font-family: sans-serif;
-      background: radial-gradient(1000px 600px at 20% -10%, rgba(34,197,94,.35), transparent),
-                  linear-gradient(135deg, var(--grad), var(--bg));
-      min-height: 100vh;
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; background-color: var(--bg); color: var(--text); padding-bottom: 110px; }
+
+    header {
+      background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+      padding: 40px 20px 60px; text-align: center; color: white;
+      border-radius: 0 0 40px 40px; box-shadow: 0 10px 25px rgba(0, 184, 148, 0.2);
     }
-    header{padding:20px;text-align:center;background:rgba(0,0,0,.25)}
-    nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;background:rgba(0,0,0,.35);padding:8px}
-    nav button, .primary, .danger{
-      border:none; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer;
-    }
-    .primary, nav button{background:var(--primary);color:#063f2e}
-    .danger{background:#ef4444;color:#fff}
+    header h1 { margin: 0; font-size: 26px; font-weight: 800; }
+    header .proprietor { margin: 10px 0 0; font-size: 17px; font-weight: 700; background: rgba(0,0,0,0.1); display: inline-block; padding: 5px 15px; border-radius: 20px; }
+
+    main { padding: 0 20px; margin-top: -30px; max-width: 500px; margin-left: auto; margin-right: auto; }
     
-    main{max-width:1000px;margin:0 auto;padding:16px}
-    .view{display:none}.view.active{display:block}
-    .card{background:var(--card);color:var(--text);border-radius:16px;padding:16px;margin-bottom:15px}
-    label{display:block; margin-top:10px; color: var(--muted); font-size: 14px;}
-    input{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px; margin-top:5px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-    .row{background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:10px; margin:6px 0; display:flex; justify-content:space-between; align-items:center}
-    footer{text-align:center; padding:20px; font-size:14px; opacity:0.8; margin-top: 20px;}
+    .view { display: none; animation: slideUp 0.3s ease-out; }
+    .view.active { display: block; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .stat-box { background: var(--card); padding: 15px; border-radius: var(--radius); box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; margin-bottom: 15px; }
     
-    #auth-view{ display: none; justify-content: center; align-items: center; height: 100vh; position: fixed; top: 0; left: 0; width: 100%; background: var(--bg); z-index: 1000; }
-    #auth-view.active { display: flex; }
-    .login-box{ background: white; color: black; padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-    .stats-box { display: flex; gap: 10px; margin-bottom: 15px; }
-    .stat-card { flex: 1; padding: 15px; border-radius: 12px; text-align: center; background: white; color: #0f172a; }
-    .report-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #f1f5f9; padding: 10px; border-radius: 12px; color: black; }
+    .btn { 
+      background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px;
+      font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; font-size: 14px;
+    }
+    .btn-excel { background: #1f6e43; margin-top: 15px; font-size: 16px; padding: 15px; }
+
+    nav {
+      position: fixed; bottom: 15px; left: 15px; right: 15px; background: #2d3436;
+      display: flex; justify-content: space-around; padding: 12px; border-radius: 25px; z-index: 1000;
+    }
+    nav button { background: none; border: none; color: #b2bec3; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    nav button.active { color: var(--primary); }
+    nav button svg { width: 20px; height: 20px; fill: currentColor; }
+
+    .customer-card {
+      background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 10px;
+      display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--primary);
+    }
+    input, select { width: 100%; border: none; padding: 12px; outline: none; font-size: 16px; background: #fff; border-radius: 10px; margin-bottom: 10px; border: 1px solid #eee; }
+    
+    footer { text-align: center; padding: 20px; color: #636e72; font-size: 13px; font-weight: bold; }
   </style>
 </head>
 <body>
 
-  <div id="auth-view" class="view">
-    <div class="login-box">
-      <h2 style="color: var(--primary);">জীবন সেবা ফার্মেসি</h2>
-      <p style="color: gray;">লগইন করুন</p>
-      <form id="loginForm">
-        <label>ইমেইল</label>
-        <input type="email" id="email" placeholder="admin@email.com" required>
-        <label>পাসওয়ার্ড</label>
-        <input type="password" id="pass" placeholder="******" required>
-        <button type="submit" class="primary" style="width:100%; margin-top:15px; padding:12px">প্রবেশ করুন</button>
-      </form>
-      <p id="loginError" style="color:red; font-size:13px; margin-top:10px"></p>
-    </div>
-  </div>
+  <header>
+    <h1>জীবন সেবা ফার্মেসি</h1>
+    <div class="proprietor">প্রো: মো: মতিউর রহমান (সুজাল)</div>
+  </header>
 
-  <div id="app-content" style="display:none">
-    <header>
-      <h1>জীবন সেবা ফার্মেসি</h1>
-      <p>প্রো:মো:মতিউর রহমান (সুজাল)</p>
-    </header>
+  <main>
+    <section id="view-home" class="view active">
+      <div class="stat-box"><h4>সর্বমোট দোকানের বকেয়া</h4><h2 id="totalBakiHome" style="color:red; font-size:24px">৳০</h2></div>
+      <div class="stat-box">
+          <p>দ্রুত অ্যাকশন</p>
+          <button onclick="navigate('add')" class="btn">＋ নতুন কাস্টমার যোগ করুন</button>
+      </div>
+    </section>
 
-    <nav>
-      <button data-route="home">হোম</button>
-      <button data-route="customers">কাস্টমার তালিকা</button>
-      <button data-route="report">আজকের রিপোর্ট</button>
-      <button data-route="add">নতুন কাস্টমার</button>
-      <button class="danger" id="logoutBtn">লগআউট</button>
-    </nav>
+    <section id="view-customers" class="view">
+      <input id="search" placeholder="নাম বা মোবাইল দিয়ে খুঁজুন..." onkeyup="searchCustomer()">
+      <div id="customerGrid"></div>
+    </section>
 
-    <main>
-      <section id="view-home" class="view">
-        <div class="stats-box">
-          <div class="stat-card">
-            <h4 style="margin:0; font-size:12px; color:gray">মোট বকেয়া</h4>
-            <h2 id="totalBakiHome" style="margin:5px 0; color:#ef4444">৳০</h2>
-          </div>
-          <div class="stat-card">
-            <h4 style="margin:0; font-size:12px; color:gray">আজকের বাকি</h4>
-            <h2 id="ajkerBakiHome" style="margin:5px 0; color:#22c55e">৳০</h2>
-          </div>
+    <section id="view-add" class="view">
+      <div class="stat-box">
+        <h3>নতুন কাস্টমার</h3>
+        <input id="addName" placeholder="কাস্টমারের নাম">
+        <input id="addPhone" placeholder="মোবাইল নম্বর">
+        <input id="addVillage" placeholder="ঠিকানা/গ্রাম">
+        <button onclick="saveCustomer()" class="btn">সেভ করুন</button>
+      </div>
+    </section>
+
+    <section id="view-report" class="view">
+      <div class="stat-box">
+        <h3 style="color: #1f6e43;">Excel রিপোর্ট ডাউনলোড</h3>
+        <p style="font-size: 14px; color: #666;">নিচের বাটনে ক্লিক করলে আপনার দোকানের সমস্ত কাস্টমারের নাম, ফোন এবং মোট বকেয়া টাকার একটি লিস্ট ডাউনলোড হবে।</p>
+        <button onclick="downloadMasterExcel()" class="btn btn-excel">📊 ডাউনলোড সমস্ত কাস্টমার লিস্ট</button>
+      </div>
+    </section>
+
+    <section id="view-detail" class="view">
+      <div class="stat-box">
+        <h2 id="cName">নাম</h2>
+        <p id="cInfo"></p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <a id="callLink" class="btn" style="background:#2ecc71">📞 কল করুন</a>
+          <button onclick="sendWhatsApp()" class="btn" style="background:#25d366">💬 হোয়াটসঅ্যাপ</button>
         </div>
-        <div class="card" style="text-align:center">
-          <h2>স্বাগতম!</h2>
-          <p>আপনার সব হিসাব অনলাইনে সুরক্ষিত আছে।</p>
+        <div style="background:#f1f3f7; padding:15px; border-radius:15px; margin-top:15px;">
+          <select id="entryType"><option value="baki">বাকি (Debt)</option><option value="joma">জমা (Payment)</option></select>
+          <input type="number" id="salePrice" placeholder="টাকার পরিমাণ">
+          <input type="text" id="saleProduct" placeholder="নোট (অপশনাল)">
+          <button onclick="saveEntry()" class="btn">সেভ এন্ট্রি</button>
         </div>
-      </section>
+        <div id="salesList" style="margin-top:15px; text-align:left"></div>
+        <h2 id="grandTotal" style="color:red; text-align:right">বকেয়া: ৳০</h2>
+      </div>
+    </section>
+  </main>
 
-      <section id="view-report" class="view">
-        <div class="card">
-          <div class="report-nav">
-            <button class="primary" onclick="changeDate(-1)">আগের দিন</button>
-            <input type="date" id="reportDate" style="width:auto; margin:0" onchange="loadDailyReport()">
-            <button class="primary" onclick="changeDate(1)">পরের দিন</button>
-          </div>
-          <h3 id="reportTitle" style="color:var(--text)">রিপোর্ট</h3>
-          <div id="dailySalesList"></div>
-          <h2 id="dailyTotal" style="text-align:right; color:#ef4444; margin-top:15px">মোট: ৳০</h2>
-        </div>
-      </section>
+  <nav>
+    <button onclick="navigate('home')" id="nav-home" class="active"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>হোম</button>
+    <button onclick="navigate('customers')" id="nav-customers"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>তালিকা</button>
+    <button onclick="navigate('report')" id="nav-report"><svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>রিপোর্ট</button>
+  </nav>
 
-      <section id="view-customers" class="view">
-        <input id="search" placeholder="নাম, পিতা বা ফোন লিখে খুঁজুন..." style="margin-bottom:15px" onkeyup="searchCustomer()">
-        <div id="customerGrid" class="grid"></div>
-      </section>
-
-      <section id="view-add" class="view">
-        <div class="card">
-          <h3>নতুন কাস্টমার যোগ করুন</h3>
-          <form id="addForm">
-            <label>কাস্টমারের নাম</label> <input name="name" required />
-            <label>পিতার নাম</label> <input name="fatherName" />
-            <label>গ্রাম/ঠিকানা</label> <input name="village" />
-            <label>ফোন নম্বর</label> <input name="phone" />
-            <button class="primary" type="submit" style="margin-top:15px">সংরক্ষণ করুন</button>
-          </form>
-        </div>
-      </section>
-
-      <section id="view-detail" class="view">
-        <div class="card">
-          <h2 id="cName">নাম</h2>
-          <p id="cInfo" style="color:gray"></p>
-          <hr>
-          <h3>নতুন লেনদেন</h3>
-          <form id="saleForm" style="display:flex; gap:10px; flex-wrap:wrap">
-            <input type="date" name="date" id="saleDate" required style="width:auto">
-            <input type="text" name="product" placeholder="বিবরণ" required style="flex:1">
-            <input type="number" name="price" placeholder="টাকা" required style="width:100px">
-            <button class="primary" type="submit">যোগ করুন</button>
-          </form>
-          <hr>
-          <div id="salesList"></div>
-          <h3 id="grandTotal" style="text-align:right">ব্যক্তিগত বকেয়া: ৳০</h3>
-          <button class="danger" id="deleteCustomerBtn" style="margin-top:20px">কাস্টমার ডিলিট করুন</button>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <p>Developed by: Fahim Shahriar Jaman</p>
-    </footer>
-  </div>
+  <footer>Developed by: Fahim Shariar Jaman</footer>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAv8kkam_BMPh9e3HbZboxV8P-DgcIodB4",
@@ -161,172 +138,126 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const authView = document.getElementById("auth-view");
-    const appContent = document.getElementById("app-content");
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        authView.classList.remove("active");
-        appContent.style.display = "block";
-        navigate("home");
-        loadCustomers();
-        updateGlobalStats();
-      } else {
-        authView.classList.add("active");
-        appContent.style.display = "none";
-      }
-    });
-
-    document.getElementById("loginForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("pass").value;
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-      } catch (err) {
-        document.getElementById("loginError").textContent = "ভুল ইমেইল বা পাসওয়ার্ড!";
-      }
+    window.navigate = (r) => {
+      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+      document.getElementById("view-" + r).classList.add("active");
+      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+      document.getElementById("nav-" + (r === 'detail' ? 'customers' : r))?.classList.add("active");
     };
 
-    document.getElementById("logoutBtn").onclick = () => signOut(auth);
-
-    function navigate(route) {
-      document.querySelectorAll("main .view").forEach(v => v.classList.remove("active"));
-      document.getElementById("view-" + route).classList.add("active");
-      if(route === 'detail') document.getElementById('saleDate').valueAsDate = new Date();
-      if(route === 'report') {
-        document.getElementById('reportDate').valueAsDate = new Date();
-        loadDailyReport();
-      }
-    }
-
-    document.querySelectorAll("nav button[data-route]").forEach(btn => {
-      btn.onclick = () => navigate(btn.dataset.route);
-    });
-
-    window.changeDate = (days) => {
-      let d = new Date(document.getElementById('reportDate').value);
-      d.setDate(d.getDate() + days);
-      document.getElementById('reportDate').valueAsDate = d;
-      loadDailyReport();
-    };
-
-    async function loadDailyReport() {
-      const targetDate = document.getElementById('reportDate').value;
-      document.getElementById('reportTitle').textContent = targetDate + " এর বাকি রিপোর্ট";
-      const q = query(collection(db, "sales"), where("date", "==", targetDate));
-      
-      onSnapshot(q, async (snap) => {
-        const list = document.getElementById("dailySalesList");
-        list.innerHTML = "";
-        let total = 0;
-        
-        for (const d of snap.docs) {
-          const s = d.data();
-          total += s.price;
-          
-          const cDoc = await getDoc(doc(db, "customers", s.customerId));
-          const cName = cDoc.exists() ? cDoc.data().name : "Unknown";
-          
-          const row = document.createElement("div");
-          row.className = "row";
-          row.innerHTML = `<span><b>${cName}</b>: ${s.product} (৳${s.price})</span>`;
-          list.appendChild(row);
-        }
-        document.getElementById("dailyTotal").textContent = `মোট: ৳${total}`;
-      });
-    }
-
-    document.getElementById("addForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const f = e.target;
-      await addDoc(collection(db, "customers"), { name: f.name.value, fatherName: f.fatherName.value, village: f.village.value, phone: f.phone.value, createdAt: Date.now() });
-      f.reset();
-      navigate("customers");
+    window.saveCustomer = async () => {
+      const n = document.getElementById("addName").value, p = document.getElementById("addPhone").value, v = document.getElementById("addVillage").value;
+      if(!n || !p) return alert("দয়া করে নাম ও মোবাইল দিন");
+      await addDoc(collection(db, "customers"), { name: n, phone: p, village: v });
+      alert("সফলভাবে সেভ হয়েছে"); navigate('customers');
     };
 
     function loadCustomers() {
-      onSnapshot(collection(db, "customers"), (snap) => {
-        const grid = document.getElementById("customerGrid");
-        grid.innerHTML = "";
-        snap.forEach(docSnap => {
-          const c = {id: docSnap.id, ...docSnap.data()};
-          const div = document.createElement("div");
-          div.className = "card customer-card";
-          div.innerHTML = `<h4>${c.name}</h4><p>পিতা: ${c.fatherName || 'নেই'}</p><button class="primary">বিস্তারিত</button>`;
-          div.querySelector("button").onclick = () => openCustomer(c.id, c);
+      onSnapshot(collection(db, "customers"), snap => {
+        const grid = document.getElementById("customerGrid"); grid.innerHTML = "";
+        snap.forEach(d => {
+          const c = d.data();
+          const div = document.createElement("div"); div.className = "customer-card";
+          div.innerHTML = `<div><b>${c.name}</b><br><small>${c.phone}</small></div><span>➜</span>`;
+          div.onclick = () => openCustomer(d.id, c);
           grid.appendChild(div);
         });
       });
     }
 
-    window.searchCustomer = () => {
-        let input = document.getElementById('search').value.toLowerCase();
-        let cards = document.querySelectorAll('.customer-card');
-        cards.forEach(card => {
-            let text = card.innerText.toLowerCase();
-            card.style.display = text.includes(input) ? "block" : "none";
+    let currentTotal = 0;
+    async function openCustomer(id, data) {
+      window.currentCustomerId = id; window.currentCustomerPhone = data.phone;
+      document.getElementById("cName").innerText = data.name;
+      document.getElementById("cInfo").innerText = data.phone + " | " + data.village;
+      document.getElementById("callLink").href = "tel:" + data.phone;
+      navigate("detail");
+      onSnapshot(query(collection(db, "entries"), where("customerId", "==", id)), snap => {
+        const list = document.getElementById("salesList"); list.innerHTML = ""; let total = 0;
+        snap.forEach(sDoc => {
+          const s = sDoc.data();
+          if(s.type === 'baki') total += s.amount; else total -= s.amount;
+          list.innerHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px; font-size:14px;"><span>${s.note}</span><span style="color:${s.type=='baki'?'red':'green'}">${s.type=='baki'?'+':'-'} ৳${s.amount}</span></div>`;
         });
+        currentTotal = total;
+        document.getElementById("grandTotal").innerText = "বকেয়া: ৳" + total;
+      });
+    }
+
+    window.saveEntry = async () => {
+      const t = document.getElementById("entryType").value, a = Number(document.getElementById("salePrice").value), n = document.getElementById("saleProduct").value || 'লেনদেন';
+      if(!a) return alert("টাকার পরিমাণ দিন");
+      await addDoc(collection(db, "entries"), { customerId: window.currentCustomerId, type: t, amount: a, note: n, timestamp: Date.now() });
+      document.getElementById("salePrice").value = ""; document.getElementById("saleProduct").value = "";
     };
 
-    async function openCustomer(id, data) {
-      document.getElementById("cName").textContent = data.name;
-      document.getElementById("cInfo").textContent = `পিতা: ${data.fatherName || 'নেই'} | গ্রাম: ${data.village} | ফোন: ${data.phone}`;
-      window.currentCustomerId = id;
-      navigate("detail");
-      const q = query(collection(db, "sales"), where("customerId", "==", id));
-      onSnapshot(q, (snap) => {
-        const list = document.getElementById("salesList");
-        list.innerHTML = "";
+   
+    window.downloadMasterExcel = async () => {
+      alert("রিপোর্ট তৈরি হচ্ছে... দয়া করে কয়েক সেকেন্ড অপেক্ষা করুন।");
+      try {
+          const customersSnap = await getDocs(collection(db, "customers"));
+          const entriesSnap = await getDocs(collection(db, "entries"));
+          
+          let reportData = [];
+          let grandTotalBaki = 0;
+
+          customersSnap.forEach(cDoc => {
+            const c = cDoc.data();
+            const cId = cDoc.id;
+            let totalBaki = 0;
+            
+            
+            entriesSnap.forEach(eDoc => {
+              const e = eDoc.data();
+              if(e.customerId === cId) {
+                if(e.type === 'baki') totalBaki += e.amount;
+                else totalBaki -= e.amount;
+              }
+            });
+
+            grandTotalBaki += totalBaki;
+
+            reportData.push({
+              "কাস্টমারের নাম": c.name,
+              "মোবাইল নম্বর": c.phone,
+              "গ্রাম/ঠিকানা": c.village || '-',
+              "মোট বকেয়া (টাকা)": totalBaki
+            });
+          });
+
+          
+          const ws = XLSX.utils.json_to_sheet(reportData);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Baki Report");
+          
+          
+          XLSX.writeFile(wb, "Dokan_Baki_Report.xlsx");
+      } catch (e) {
+          alert("ভুল হয়েছে: " + e.message);
+      }
+    };
+
+    window.sendWhatsApp = () => window.open(`https://wa.me/88${window.currentCustomerPhone}?text=${encodeURIComponent('আসসালামু আলাইকুম, জীবন সেবা ফার্মেসি। আপনার বর্তমান বকেয়া: ৳'+currentTotal)}`);
+
+    function updateStats() {
+      onSnapshot(collection(db, "entries"), snap => {
         let total = 0;
         snap.forEach(d => {
           const s = d.data();
-          total += s.price;
-          const row = document.createElement("div");
-          row.className = "row";
-          row.innerHTML = `<span>${s.date}: ${s.product} (৳${s.price})</span><button class="danger" style="padding:4px 8px; font-size:10px" onclick="deleteSale('${d.id}')">মুছুন</button>`;
-          list.appendChild(row);
+          if(s.type === 'baki') total += s.amount; else total -= s.amount;
         });
-        document.getElementById("grandTotal").textContent = `ব্যক্তিগত বকেয়া: ৳${total}`;
+        document.getElementById("totalBakiHome").innerText = "৳" + total;
       });
     }
 
-    function updateGlobalStats() {
-      const today = new Date().toLocaleDateString('en-CA'); 
-      onSnapshot(collection(db, "sales"), (snap) => {
-        let totalBaki = 0; let ajkerBaki = 0;
-        snap.forEach(d => {
-          const s = d.data();
-          totalBaki += s.price;
-          if(s.date === today) ajkerBaki += s.price;
-        });
-        document.getElementById('totalBakiHome').textContent = `৳${totalBaki}`;
-        document.getElementById('ajkerBakiHome').textContent = `৳${ajkerBaki}`;
-      });
-    }
-
-    window.deleteSale = async (id) => {
-      if(confirm("মুছতে চান?")) await deleteDoc(doc(db, "sales", id));
+    window.searchCustomer = () => {
+      let val = document.getElementById("search").value.toLowerCase();
+      document.querySelectorAll(".customer-card").forEach(c => c.style.display = c.innerText.toLowerCase().includes(val) ? "flex" : "none");
     };
 
-    document.getElementById("saleForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const f = e.target;
-      await addDoc(collection(db, "sales"), { customerId: window.currentCustomerId, date: f.date.value, product: f.product.value, price: Number(f.price.value) });
-      f.reset();
-      document.getElementById('saleDate').valueAsDate = new Date();
-    };
-
-    document.getElementById("deleteCustomerBtn").onclick = async () => {
-      if(confirm("সব হিসাব মুছে যাবে। নিশ্চিত?")) {
-        await deleteDoc(doc(db, "customers", window.currentCustomerId));
-        navigate("customers");
-      }
-    };
+    loadCustomers(); updateStats();
   </script>
 </body>
 </html>
-
