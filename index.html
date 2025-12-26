@@ -43,7 +43,7 @@
     .action-group button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; color: white; }
     .btn-baki { background: #ef4444; }
     .btn-joma { background: #10b981; }
-    .comm-btn{ padding: 8px 12px; border-radius: 8px; text-decoration: none; color: white; font-size: 12px; display: inline-block; margin-right: 5px; font-weight: bold; }
+    .comm-btn{ padding: 10px 14px; border-radius: 8px; text-decoration: none; color: white; font-size: 14px; display: inline-block; margin-right: 5px; font-weight: bold; margin-bottom: 5px;}
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -160,6 +160,8 @@
     const db = getFirestore(app);
 
     let allCustomers = [];
+    let currentCustomerTotal = 0;
+
     onAuthStateChanged(auth, (user) => {
       if (user) {
         document.getElementById("auth-view").style.display = "none";
@@ -233,29 +235,34 @@
       document.getElementById("cName").textContent = data.name;
       document.getElementById("cInfo").textContent = `পিতা: ${data.fatherName || 'নেই'} | গ্রাম: ${data.village} | ফোন: ${data.phone}`;
       
-      const commBox = document.getElementById("commActions");
-      if(data.phone) {
-        commBox.innerHTML = `
-          <a href="tel:${data.phone}" class="comm-btn" style="background:#3b82f6">📞 কল</a>
-          <a href="https://wa.me/88${data.phone}" class="comm-btn" style="background:#25d366">💬 WhatsApp</a>
-          <a href="sms:${data.phone}" class="comm-btn" style="background:#6366f1">✉️ এসএমএস</a>
-        `;
-      } else {
-        commBox.innerHTML = '<p style="color:red; font-size:12px">ফোন নম্বর নেই</p>';
-      }
-      
       window.currentCustomerId = id;
       navigate("detail");
+
       onSnapshot(query(collection(db, "sales"), where("customerId", "==", id)), (snap) => {
         const list = document.getElementById("salesList"); list.innerHTML = "";
-        let total = 0;
+        currentCustomerTotal = 0;
         snap.forEach(d => {
-          const s = d.data(); total += s.price;
+          const s = d.data(); currentCustomerTotal += s.price;
           const row = document.createElement("div"); row.className = "row";
           row.innerHTML = `<span>${s.date}: ${s.product} (৳${s.price})</span><button class="danger" style="padding:4px 8px; font-size:10px" onclick="deleteSale('${d.id}')">মুছুন</button>`;
           list.appendChild(row);
         });
-        document.getElementById("grandTotal").textContent = `বকেয়া: ৳${total}`;
+        document.getElementById("grandTotal").textContent = `বকেয়া: ৳${currentCustomerTotal}`;
+        
+        const commBox = document.getElementById("commActions");
+        if(data.phone) {
+          
+          const msg = `জীবন সেবা ফার্মেসি: জনাব ${data.name}, আপনার বর্তমান বকেয়া ${currentCustomerTotal} টাকা। বকেয়া টাকা দ্রুত পরিশোধ করার জন্য অনুরোধ করা হলো। যোগাযোগ: ০১৭১৯৪২৩৭২২। প্রো: মোঃ মতিউর রহমান (সুজাল)`;
+          const encodedMsg = encodeURIComponent(msg);
+          
+          commBox.innerHTML = `
+            <a href="tel:${data.phone}" class="comm-btn" style="background:#3b82f6">📞 কল</a>
+            <a href="https://wa.me/88${data.phone}?text=${encodedMsg}" class="comm-btn" style="background:#25d366">💬 WhatsApp</a>
+            <a href="sms:${data.phone}?body=${encodedMsg}" class="comm-btn" style="background:#6366f1">✉️ এসএমএস</a>
+          `;
+        } else {
+          commBox.innerHTML = '<p style="color:red; font-size:12px">ফোন নম্বর নেই</p>';
+        }
       });
     }
 
@@ -294,7 +301,7 @@
       const sales = await getDocs(collection(db, "sales"));
       const balances = {};
       sales.forEach(s => { const d = s.data(); balances[d.customerId] = (balances[d.customerId] || 0) + d.price; });
-      customers.forEach(c => { const d = c.data(); report.push({ "নাম": d.name, "ঠিকানা": d.village, "ফোন": d.phone, "বকেয়া": balances[c.id] || 0 }); });
+      customers.forEach(c => { const d = c.data(); report.push({ "নাম": d.name, "ঠিকানা": d.village, "ফোন": d.phone, "বকেয়া": balances[c.id] || 0 }); });
       const ws = XLSX.utils.json_to_sheet(report); const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "রিপোর্ট"); XLSX.writeFile(wb, "Report.xlsx");
     };
