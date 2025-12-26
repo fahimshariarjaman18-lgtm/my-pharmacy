@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -168,9 +169,7 @@
         document.getElementById("app-content").style.display = "block";
         document.getElementById("entryDate").valueAsDate = new Date();
         document.getElementById("reportDate").valueAsDate = new Date();
-        navigate("home");
-        loadCustomers();
-        loadAllOverTotal();
+        navigate("home"); loadCustomers(); loadAllOverTotal();
         loadDailyReport(document.getElementById("reportDate").value);
       } else {
         document.getElementById("auth-view").style.display = "flex";
@@ -234,9 +233,7 @@
     async function openCustomer(id, data) {
       document.getElementById("cName").textContent = data.name;
       document.getElementById("cInfo").textContent = `পিতা: ${data.fatherName || 'নেই'} | গ্রাম: ${data.village} | ফোন: ${data.phone}`;
-      
-      window.currentCustomerId = id;
-      navigate("detail");
+      window.currentCustomerId = id; navigate("detail");
 
       onSnapshot(query(collection(db, "sales"), where("customerId", "==", id)), (snap) => {
         const list = document.getElementById("salesList"); list.innerHTML = "";
@@ -252,9 +249,8 @@
         const commBox = document.getElementById("commActions");
         if(data.phone) {
           
-          const msg = `জীবন সেবা ফার্মেসি: জনাব ${data.name}, আপনার বর্তমান বকেয়া ${currentCustomerTotal} টাকা। বকেয়া টাকা দ্রুত পরিশোধ করার জন্য অনুরোধ করা হলো। যোগাযোগ: ০১৭১৯৪২৩৭২২। প্রো: মোঃ মতিউর রহমান (সুজাল)`;
+          const msg = `প্রিয় গ্রাহক ${data.name}, জীবন সেবা ফার্মেসিতে আপনার মোট বকেয়া ${currentCustomerTotal} টাকা। বকেয়া টাকা দ্রুত জমা দেওয়ার জন্য অনুরোধ করা হলো। যোগাযোগ: ০১৭১৯৪২৩৭২২। প্রো: মোঃ মতিউর রহমান (সুজাল)`;
           const encodedMsg = encodeURIComponent(msg);
-          
           commBox.innerHTML = `
             <a href="tel:${data.phone}" class="comm-btn" style="background:#3b82f6">📞 কল</a>
             <a href="https://wa.me/88${data.phone}?text=${encodedMsg}" class="comm-btn" style="background:#25d366">💬 WhatsApp</a>
@@ -271,13 +267,9 @@
       const desc = document.getElementById("entryDesc").value;
       let amount = Number(document.getElementById("entryAmount").value);
       if(!desc || !amount) return alert("বিবরণ ও টাকা দিন");
-      
-      if(type === 'joma') amount = -Math.abs(amount);
-      else amount = Math.abs(amount);
-
+      if(type === 'joma') amount = -Math.abs(amount); else amount = Math.abs(amount);
       await addDoc(collection(db, "sales"), { customerId: window.currentCustomerId, date, product: desc, price: amount });
-      document.getElementById("entryDesc").value = "";
-      document.getElementById("entryAmount").value = "";
+      document.getElementById("entryDesc").value = ""; document.getElementById("entryAmount").value = "";
     };
 
     window.deleteSale = async (id) => { if(confirm("মুছতে চান?")) await deleteDoc(doc(db, "sales", id)); };
@@ -301,12 +293,21 @@
       const sales = await getDocs(collection(db, "sales"));
       const balances = {};
       sales.forEach(s => { const d = s.data(); balances[d.customerId] = (balances[d.customerId] || 0) + d.price; });
-      customers.forEach(c => { const d = c.data(); report.push({ "নাম": d.name, "ঠিকানা": d.village, "ফোন": d.phone, "বকেয়া": balances[c.id] || 0 }); });
+      customers.forEach(c => { const d = c.data(); report.push({ "নাম": d.name, "ঠিকানা": d.village, "ফোন": d.phone, "বকেয়া": balances[c.id] || 0 }); });
       const ws = XLSX.utils.json_to_sheet(report); const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "রিপোর্ট"); XLSX.writeFile(wb, "Report.xlsx");
     };
 
-    document.getElementById("deleteCustomerBtn").onclick = async () => { if(confirm("ডিলিট নিশ্চিত?")) { await deleteDoc(doc(db, "customers", window.currentCustomerId)); navigate("customers"); } };
+    document.getElementById("deleteCustomerBtn").onclick = async () => {
+      if(confirm("কাস্টমার ডিলিট করলে তার সব হিসাবও মুছে যাবে। নিশ্চিত?")) {
+        const custId = window.currentCustomerId;
+        const salesSnap = await getDocs(query(collection(db, "sales"), where("customerId", "==", custId)));
+        const batchPromises = salesSnap.docs.map(sDoc => deleteDoc(doc(db, "sales", sDoc.id)));
+        await Promise.all(batchPromises);
+        await deleteDoc(doc(db, "customers", custId));
+        navigate("customers");
+      }
+    };
   </script>
 </body>
 </html>
