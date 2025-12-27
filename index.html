@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -22,12 +21,14 @@
     header p { margin: 5px 0 0; font-size: 16px; font-weight: bold; color: #d1fae5; }
     
     nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;background:rgba(0,0,0,.35);padding:8px}
-    nav button, .primary, .danger, .success{
+    nav button, .primary, .danger, .success, .warning, .back-btn{
       border:none; padding:8px 12px; border-radius:10px; font-weight:700; cursor:pointer;
     }
     .primary, nav button{background:var(--primary);color:#063f2e}
     .danger{background:#ef4444;color:#fff}
     .success{background:#10b981;color:#fff; border: 1px solid #fff;}
+    .warning{background:#f59e0b; color:#fff;}
+    .back-btn{background:#64748b; color:white; margin-bottom:15px; display:inline-block;}
     
     main{max-width:1000px;margin:0 auto;padding:16px}
     .view{display:none}.view.active{display:block}
@@ -58,7 +59,6 @@
         <label>পাসওয়ার্ড</label> <input type="password" id="pass" placeholder="******" required>
         <button type="submit" class="primary" style="width:100%; margin-top:15px; padding:12px">প্রবেশ করুন</button>
       </form>
-      <p id="loginError" style="color:red; font-size:13px; margin-top:10px"></p>
     </div>
   </div>
 
@@ -102,6 +102,7 @@
 
       <section id="view-add" class="view">
         <div class="card">
+          <button class="back-btn" onclick="navigate('home')">⬅ ব্যাক</button>
           <h3>নতুন কাস্টমার যোগ করুন</h3>
           <form id="addForm">
             <label>কাস্টমারের নাম</label> <input name="name" required />
@@ -114,6 +115,7 @@
       </section>
 
       <section id="view-detail" class="view">
+        <button class="back-btn" onclick="navigate('customers')">⬅ কাস্টমার লিস্টে ফিরে যান</button>
         <div class="card">
           <h2 id="cName">নাম</h2>
           <p id="cInfo" style="color:gray"></p>
@@ -134,7 +136,27 @@
           <h3>হিসাবের তালিকা</h3>
           <div id="salesList"></div>
           <h3 id="grandTotal" style="text-align:right; color: #ef4444;">বকেয়া: ৳০</h3>
-          <button class="danger" id="deleteCustomerBtn" style="margin-top:20px; width:100%">কাস্টমার ডিলিট করুন</button>
+          
+          <div style="margin-top:30px; display:flex; gap:10px">
+            <button class="warning" id="editCustomerBtn" style="flex:1">✏️ তথ্য এডিট করুন</button>
+            <button class="danger" id="deleteCustomerBtn" style="flex:1">🗑️ কাস্টমার ডিলিট</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-edit" class="view">
+        <button class="back-btn" onclick="navigate('detail')">⬅ বাতিল করুন</button>
+        <div class="card">
+          <h3>কাস্টমার তথ্য আপডেট করুন</h3>
+          <form id="editForm">
+            <label>কাস্টমারের নাম</label> <input id="edit_name" required />
+            <label>পিতার নাম</label> <input id="edit_fatherName" />
+            <label>গ্রাম/ঠিকানা</label> <input id="edit_village" />
+            <label>ফোন নম্বর</label> <input id="edit_phone" />
+            <div class="action-group">
+              <button class="primary" type="submit">সেভ করুন</button>
+            </div>
+          </form>
         </div>
       </section>
     </main>
@@ -145,7 +167,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAv8kkam_BMPh9e3HbZboxV8P-DgcIodB4",
@@ -162,6 +184,7 @@
 
     let allCustomers = [];
     let currentCustomerTotal = 0;
+    let currentCustomerData = null;
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -177,6 +200,12 @@
       }
     });
 
+    function navigate(route) {
+      document.querySelectorAll("main .view").forEach(v => v.classList.remove("active"));
+      document.getElementById("view-" + route).classList.add("active");
+      window.scrollTo(0,0);
+    }
+
     function loadAllOverTotal() {
       onSnapshot(collection(db, "sales"), (snap) => {
         let total = 0; snap.forEach(d => total += d.data().price);
@@ -191,11 +220,6 @@
     };
 
     document.getElementById("logoutBtn").onclick = () => signOut(auth);
-
-    function navigate(route) {
-      document.querySelectorAll("main .view").forEach(v => v.classList.remove("active"));
-      document.getElementById("view-" + route).classList.add("active");
-    }
 
     document.querySelectorAll("nav button[data-route]").forEach(btn => {
       btn.onclick = () => navigate(btn.dataset.route);
@@ -219,7 +243,7 @@
       const grid = document.getElementById("customerGrid"); grid.innerHTML = "";
       data.forEach(c => {
         const div = document.createElement("div"); div.className = "card";
-        div.innerHTML = `<h4>${c.name}</h4><p>ফোন: ${c.phone || 'নেই'}</p><button class="primary">বিস্তারিত</button>`;
+        div.innerHTML = `<h4>${c.name}</h4><p>ফোন: ${c.phone || 'নেই'}</p><button class="primary">বিস্তারিত হিসাব</button>`;
         div.querySelector("button").onclick = () => openCustomer(c.id, c);
         grid.appendChild(div);
       });
@@ -231,6 +255,7 @@
     };
 
     async function openCustomer(id, data) {
+      currentCustomerData = data;
       document.getElementById("cName").textContent = data.name;
       document.getElementById("cInfo").textContent = `পিতা: ${data.fatherName || 'নেই'} | গ্রাম: ${data.village} | ফোন: ${data.phone}`;
       window.currentCustomerId = id; navigate("detail");
@@ -248,8 +273,7 @@
         
         const commBox = document.getElementById("commActions");
         if(data.phone) {
-          
-          const msg = `প্রিয় গ্রাহক ${data.name}, জীবন সেবা ফার্মেসিতে আপনার মোট বকেয়া ${currentCustomerTotal} টাকা। বকেয়া টাকা দ্রুত জমা দেওয়ার জন্য অনুরোধ করা হলো। যোগাযোগ: ০১৭১৯৪২৩৭২২। প্রো: মোঃ মতিউর রহমান (সুজাল)`;
+          const msg = `প্রিয় গ্রাহক ${data.name}, জীবন সেবা ফার্মেসিতে আপনার মোট বকেয়া ${currentCustomerTotal} টাকা। বকেয়া টাকা দ্রুত জমা দেওয়ার জন্য অনুরোধ করা হলো। যোগাযোগ: ০১৭১৯৪২৩৭২২। প্রো: মোঃ মতিউর রহমান (সুজাল)`;
           const encodedMsg = encodeURIComponent(msg);
           commBox.innerHTML = `
             <a href="tel:${data.phone}" class="comm-btn" style="background:#3b82f6">📞 কল</a>
@@ -261,6 +285,28 @@
         }
       });
     }
+
+    document.getElementById("editCustomerBtn").onclick = () => {
+      document.getElementById("edit_name").value = currentCustomerData.name;
+      document.getElementById("edit_fatherName").value = currentCustomerData.fatherName || "";
+      document.getElementById("edit_village").value = currentCustomerData.village || "";
+      document.getElementById("edit_phone").value = currentCustomerData.phone || "";
+      navigate("edit");
+    };
+
+    document.getElementById("editForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const updatedData = {
+        name: document.getElementById("edit_name").value,
+        fatherName: document.getElementById("edit_fatherName").value,
+        village: document.getElementById("edit_village").value,
+        phone: document.getElementById("edit_phone").value
+      };
+      await updateDoc(doc(db, "customers", window.currentCustomerId), updatedData);
+      alert("তথ্য আপডেট সফল!");
+      currentCustomerData = {id: window.currentCustomerId, ...updatedData};
+      openCustomer(window.currentCustomerId, currentCustomerData);
+    };
 
     window.saveEntry = async (type) => {
       const date = document.getElementById("entryDate").value;
@@ -293,7 +339,7 @@
       const sales = await getDocs(collection(db, "sales"));
       const balances = {};
       sales.forEach(s => { const d = s.data(); balances[d.customerId] = (balances[d.customerId] || 0) + d.price; });
-      customers.forEach(c => { const d = c.data(); report.push({ "নাম": d.name, "ঠিকানা": d.village, "ফোন": d.phone, "বকেয়া": balances[c.id] || 0 }); });
+      customers.forEach(c => { const d = c.data(); report.push({ "নাম": d.name, "ঠিকানা": d.village, "ফোন": d.phone, "বকেয়া": balances[c.id] || 0 }); });
       const ws = XLSX.utils.json_to_sheet(report); const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "রিপোর্ট"); XLSX.writeFile(wb, "Report.xlsx");
     };
@@ -308,6 +354,9 @@
         navigate("customers");
       }
     };
+
+    // navigate ফাংশনটি window তে গ্লোবাল করে দেওয়া হলো
+    window.navigate = navigate;
   </script>
 </body>
 </html>
